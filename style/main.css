@@ -1,0 +1,17 @@
+.card {
+    display: inline-block;
+}
+
+.stack {
+    margin-left: 25px;
+}
+.stack .card {
+    margin-left:-25px;
+}
+
+.smallstack {
+    margin-left: 40px;
+}
+.smallstack .card {
+    margin-left: -40px;
+}
