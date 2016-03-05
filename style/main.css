@@ -15,3 +15,8 @@
 .smallstack .card {
     margin-left: -40px;
 }
+
+.stackinline {
+    display: inline-block;
+    margin-right: 8px;
+}

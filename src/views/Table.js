@@ -25,15 +25,15 @@ export default class Table extends Component {
             if (i == this.props.moi) {
                 return <span key={i}/>
             }
-            return <div key={i} style={{display: "inline-block"}}>
-                Joueur {jeu.nomJoueurs[i]}:
+            return <div key={i} className="stackinline">
+                Joueur {jeu.nomJoueurs[i]}:{" "}
                 <CardStack className="smallstack" cartes={cartesJoueur}/>
             </div>
         });
 
         const plisFait = jeu.pliFait.map((pli, i) => {
-            return <div key={i} style={{display: "inline-block"}}>
-                Plis joueur {jeu.nomJoueurs[i]}:
+            return <div key={i} className="stackinline">
+                Plis joueur {jeu.nomJoueurs[i]}:{" "}
                 <CardStack className="smallstack" cartes={pli}/>
             </div>;
         });
@@ -92,7 +92,9 @@ export default class Table extends Component {
             <div>
                 Pli:
                 <CardStack className="stack" cartes={jeu.pli}/>
+                {jeu.pli.map((p, i) => jeu.nomJoueurs[(jeu.tourDe + jeu.joueurs - (jeu.pli.length) + i) % jeu.joueurs]).join(", ")}
             </div>
+            <br/>
             {jeu.etat == Etats.APPELER_ROI ?
                 <CardStack cartes={["PR", "KR", "TR", "CR"]} onClick={(card) => this.props.onPlayCard(card)}/>
                 :""}
