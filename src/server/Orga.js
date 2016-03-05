@@ -70,7 +70,7 @@ export function createActionHandler(connection) {
                     if (connection !== null)
                         connection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint(getNomJoueurs())));
                 });
-                break;//TODO reconnect?
+                break;
             case Actions.REJOINDRE: {
                 const index = joueur_attendant.findIndex(j => j.guid == m.guid);
                 if (index != -1) {

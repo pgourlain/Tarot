@@ -24,32 +24,38 @@ export default class Tarot extends Component {
         if (nomJoueur) {
             this.setState({nomJoueur});
         }
+        let guid;
+        if (localStorage.getItem("guid") !== null) {
+            guid = localStorage.getItem("guid");
+        } else {
+            guid = uuid.v4();
+            localStorage.setItem("guid", guid);
+        }
+
+        this.setState({guid});
     }
     componentDidMount() {
+        this.connectWebsocket();
+    }
+    connectWebsocket() {
         const client = new w3cwebsocket((location.protocol == "http:" ? 'ws://' : "wss://")+ location.hostname + (location.port ? ':' + location.port : '') + '/tarot/ws/', 'tarot-protocol');
 
         client.onerror = () => {
             console.log('Connection Error');
+            setTimeout(() => this.connectWebsocket(), 60000);
         };
 
         client.onopen = () => {
             console.log('WebSocket Client Connected');
             if (client.readyState === client.OPEN) {
-                let guid;
-                if (localStorage.getItem("guid") !== null) {
-                    guid = localStorage.getItem("guid");
-                    client.send(JSON.stringify(Actions.makeRejoindre(guid)));
-                } else {
-                    guid = uuid.v4();
-                }
-                localStorage.setItem("guid", guid);
-
-                this.setState({guid, client});
+                client.send(JSON.stringify(Actions.makeRejoindre(this.state.guid)));
+                this.setState({client});
             }
         };
 
         client.onclose = () => {
             console.log('tarot-protocol Client Closed');
+            setTimeout(() => this.connectWebsocket(), 6000);
         };
 
         client.onmessage = (e) => {
@@ -61,13 +67,13 @@ export default class Tarot extends Component {
                         this.setState({jeu: m.jeu});
                         break;
                     case ServerResponses.JOUEUR_JOINT: {
-                            const moi = m.joueurs.findIndex(nom => nom == this.state.nomJoueur);
-                            if (moi == -1) {
-                                this.setState({joueurs: null, moi: null});
-                            } else {
-                                this.setState({joueurs: m.joueurs, moi: moi});
-                            }
-                            break;
+                        const moi = m.joueurs.findIndex(nom => nom == this.state.nomJoueur);
+                        if (moi == -1) {
+                            this.setState({joueurs: null, moi: null});
+                        } else {
+                            this.setState({joueurs: m.joueurs, moi: moi});
+                        }
+                        break;
                     }
                     case ServerResponses.REJOINDU: {
                         const moi = m.moi != null ? m.moi : m.joueurs.findIndex(nom => nom == this.state.nomJoueur);
