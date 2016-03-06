@@ -181,7 +181,7 @@ export function createActionHandler(connection) {
         }
     };
 
-    function getChatMessage(message, name) {
+    function getChatMessage(name, message) {
         return new Date().toTimeString().substring(0, 8) + " " + name + ": " + message.substring(0, 100).replace("\n", " ") + "\n";
     }
 
