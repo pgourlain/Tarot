@@ -122,7 +122,7 @@ export default class Jeu {
             this.data.chien = [];
             this.data.etat = Etats.FAIRE_JEU;
             callback();
-        }, 5000);
+        }, 7000);
     }
 
     static couleurs = {"P": 0, "K": 1, "T": 2, "C": 3, "A": 4};
@@ -363,7 +363,7 @@ export default class Jeu {
                     this.data.preneurAGagne = Jeu.compteCartes(cartesPreneur) > this.data.pointsNecessaire;
                 }
                 callback();
-            }, 1000);
+            }, 3000);
         }
     }
 

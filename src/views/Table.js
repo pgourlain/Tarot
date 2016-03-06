@@ -33,10 +33,14 @@ export default class Table extends Component {
         });
 
         const plisFait = jeu.pliFait.map((pli, i) => {
-            return <div key={i} className="stackinline">
-                Plis joueur <Nom nom={jeu.nomJoueurs[i]}/>:{" "}
-                <CardStack className="smallstack" cartes={pli}/>
-            </div>;
+            if (pli.length > 0) {
+                return <div key={i} className="stackinline">
+                    Plis joueur <Nom nom={jeu.nomJoueurs[i]}/>:{" "}
+                    <CardStack className="smallstack" cartes={pli}/>
+                </div>;
+            } else {
+                return <div/>;
+            }
         });
 
         let status;
@@ -54,7 +58,7 @@ export default class Table extends Component {
             }
         } else if (jeu.etat == Etats.QUI_PREND) {
             if (jeu.tourDe == this.props.moi) {
-                status = <b>Est-ce que tu veux prendre!</b>;
+                status = <b>Est-ce que tu veux prendre?</b>;
             } else {
                 status = <span>C'est le tour de joueur <Nom nom={jeu.nomJoueurs[jeu.tourDe]}/> à décider. </span>;
             }
@@ -67,7 +71,7 @@ export default class Table extends Component {
         }
 
         return <div>
-            Tu es joueur <Nom nom={jeu.nomJoueurs[this.props.moi]}/>
+            Tu es le joueur <Nom nom={jeu.nomJoueurs[this.props.moi]}/><br/>
             {jeu.preneur !== null ? <span>Joueur <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> a pris. </span> : ""}
             {jeu.roiAppele !== null ? " Il a appele le roi de " + {"PR": "pique", "KR": "carreau", "TR": "trèfle", "CR": "cœur"}[jeu.roiAppele] + ". ": ""}
             <br/>
