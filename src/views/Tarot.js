@@ -7,6 +7,7 @@ import uuid from 'uuid'
 import Table from './Table'
 import {Actions, ServerResponses} from '../datastructure'
 import {Etats} from '../server/Jeu'
+import Chat from './Chat'
 
 export default class Tarot extends Component {
     state = {
@@ -15,7 +16,8 @@ export default class Tarot extends Component {
         moi: null,
         joueurs: null,
         guid: null,
-        nomJoueur: ""
+        nomJoueur: "",
+        chat_attendant: ""
     };
     componentWillMount() {
         const nomJoueur = localStorage.getItem("nomJoueur");
@@ -67,15 +69,14 @@ export default class Tarot extends Component {
                     case ServerResponses.JOUEUR_JOINT: {
                         const moi = m.guids.findIndex(guid => guid == this.state.guid);
                         if (moi == -1) {
-                            this.setState({joueurs: null, moi: null});
+                            this.setState({joueurs: null, moi: null, chat_attendant: ""});
                         } else {
-                            this.setState({joueurs: m.joueurs, moi: moi});
+                            this.setState({joueurs: m.joueurs, moi: moi, chat_attendant: m.chat_attendant});
                         }
                         break;
                     }
                     case ServerResponses.REJOINDU: {
-                        const moi = m.moi != null ? m.moi : m.joueurs.findIndex(nom => nom == this.state.nomJoueur);
-                        this.setState({joueurs: m.joueurs, moi: moi});
+                        this.setState({moi: m.moi});
                         break;
                     }
                 }
@@ -117,6 +118,7 @@ export default class Tarot extends Component {
                     {this.state.joueurs.length} joueurs: {this.state.joueurs.join(", ")}<br/>
                     <input type="button" value="Commencer le jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeStart()))}/>
                     <input type="button" value="Quitter" onClick={() => this.state.client.send(JSON.stringify(Actions.makeQuitter()))}/>
+                    <Chat chat={this.state.chat_attendant} onSubmit={(message) => this.state.client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
                 </div>;
             }
         }
@@ -130,10 +132,7 @@ export default class Tarot extends Component {
                       onFiniFaireJeu={() => this.state.client.send(JSON.stringify(Actions.makeFiniFaireJeu()))}
             />
             {this.state.jeu.etat == Etats.FINI ? <input type="button" value="Prochain jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeProchainJeu()))}/> : ""}
-            <form className="chat" onSubmit={(e) => {e.preventDefault();this.state.client.send(JSON.stringify(Actions.makeSendMessage(this.state.chatmessage)));this.setState({chatmessage: ""})}}>
-                <input type="text" value={this.state.chatmessage} onChange={(e) => this.setState({chatmessage: e.target.value})}/><input type="submit" value="Envoi"/>
-                <textarea value={this.state.jeu.chat} readOnly={true}/>
-            </form>
+            <Chat chat={this.state.jeu.chat} onSubmit={(message) => this.state.client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
             <input type="button" value="Fermer le jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeQuitterJeu()))}/>
         </div>
     }
