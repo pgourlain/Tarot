@@ -9,8 +9,6 @@ import {Actions, ServerResponses} from '../datastructure'
 import {Etats} from '../server/Jeu'
 
 export default class Tarot extends Component {
-    static defaultProps = {
-    };
     state = {
         jeu: null,
         client: null,
@@ -84,6 +82,25 @@ export default class Tarot extends Component {
             }
         };
     }
+    componentWillUpdate(nextProps, nextState) {
+        if (this.state.jeu == null) {
+            if (nextState.jeu != null) {
+                notifyUser("Le jeu a commencé!");
+            }
+        } else {
+            if (nextState.jeu != null) {
+                if (cestAmoi(nextState.jeu, this.state.moi) && ! cestAmoi(this.state.jeu, this.state.moi)) {
+                    notifyUser("C'est à toi!");
+                }
+            }
+        }
+        function cestAmoi(jeu, moi) {
+            return (jeu.etat == Etats.JEU && jeu.tourDe == moi) ||
+                (jeu.etat == Etats.COUPER && jeu.coupDe == moi) ||
+                (jeu.etat == Etats.QUI_PREND && jeu.tourDe == moi) ||
+                (jeu.etat == Etats.APPELER_ROI && jeu.preneur == moi);
+        }
+    }
     render() {
         if (this.state.jeu == null) {
             if (this.state.client == null || this.state.client.readyState !== this.state.client.OPEN) {
@@ -115,3 +132,15 @@ export default class Tarot extends Component {
         </div>
     }
 }
+
+function notifyUser(text) {
+    if (pageActive) {
+        return;
+    }
+    var audio = new Audio('tarot/static/ding.mp3');
+    audio.play();
+}
+
+let pageActive = true;
+window.addEventListener("focus", () => pageActive = true);
+window.addEventListener("blur", () => pageActive = false);

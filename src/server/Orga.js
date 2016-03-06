@@ -146,7 +146,7 @@ export function createActionHandler(connection) {
                 sendToAll(jeu);
                 break;
             case Actions.QUITTER_JEU:
-                jeu.guids.forEach((joueur_guid) => {
+                jeu.guids.forEach(joueur_guid => {
                     delete known_guids[joueur_guid];
                 });
                 jeu.connections.forEach((connection) => {
