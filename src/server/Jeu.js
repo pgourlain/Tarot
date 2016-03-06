@@ -76,6 +76,7 @@ export default class Jeu {
         this.data.excusePliFaitPar = null;
         this.data.resultat = null;
         this.data.pointsNecessaire = null;
+        this.data.preneurAGagne = null;
     }
 
     coupe(nombre) {
@@ -357,7 +358,9 @@ export default class Jeu {
                 if (this.data.cartesJoueurs[0].length == 0) {
                     this.data.etat = Etats.FINI;
                     this.data.resultat = this.data.pliFait.map((pli) => Jeu.compteCartes(pli));
-                    this.data.pointsNecessaire = Jeu.pointsNecessaire(this.data.pliFait[this.data.preneur]);
+                    const cartesPreneur = this.data.joueurAvecRoi === null ? this.data.pliFait[this.data.preneur] : this.data.pliFait[this.data.preneur].concat(this.data.pliFait[this.data.joueurAvecRoi]);
+                    this.data.pointsNecessaire = Jeu.pointsNecessaire(cartesPreneur);
+                    this.data.preneurAGagne = Jeu.compteCartes(cartesPreneur) > this.data.pointsNecessaire;
                 }
                 callback();
             }, 1000);

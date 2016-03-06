@@ -116,7 +116,8 @@ export default class Table extends Component {
             {jeu.resultat !== null ?
                 <div>
                     {jeu.resultat.map((r, i) => <div key={i}>{jeu.nomJoueurs[i] + ": " + r}</div>)}
-                    Le preneur {jeu.nomJoueurs[jeu.preneur]} a besoin de {jeu.pointsNecessaire}.
+                    Le preneur {jeu.nomJoueurs[jeu.preneur]} a besoin de {jeu.pointsNecessaire}.<br/>
+                    {jeu.preneurAGagne ? "Le preneur a gagné." : "Le preneur a perdu."}
                 </div>
                 : []}
         </div>;
