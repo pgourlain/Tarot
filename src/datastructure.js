@@ -51,7 +51,10 @@ export const Actions = {
     makeQuitterJeu: () => ({type: Actions.QUITTER_JEU}),
 
     PROCHAIN_JEU: "prochainJeu",
-    makeProchainJeu: () => ({type: Actions.PROCHAIN_JEU})
+    makeProchainJeu: () => ({type: Actions.PROCHAIN_JEU}),
+
+    SEND_MESSAGE: "sendMessage",
+    makeSendMessage: (message) => ({type: Actions.SEND_MESSAGE, message})
 };
 
 export const ServerResponses = {

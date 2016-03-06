@@ -127,8 +127,12 @@ export default class Tarot extends Component {
                       onPrendsPasse={(prends) => this.state.client.send(JSON.stringify(Actions.makePrendsPasse(prends)))}
                       onFiniFaireJeu={() => this.state.client.send(JSON.stringify(Actions.makeFiniFaireJeu()))}
             />
-            <input type="button" value="Fermer le jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeQuitterJeu()))}/>
             {this.state.jeu.etat == Etats.FINI ? <input type="button" value="Prochain jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeProchainJeu()))}/> : ""}
+            <form className="chat" onSubmit={(e) => {e.preventDefault();this.state.client.send(JSON.stringify(Actions.makeSendMessage(this.state.chatmessage)));this.setState({chatmessage: ""})}}>
+                <input type="text" value={this.state.chatmessage} onChange={(e) => this.setState({chatmessage: e.target.value})}/><input type="submit" value="Envoi"/>
+                <textarea value={this.state.jeu.chat} readOnly={true}/>
+            </form>
+            <input type="button" value="Fermer le jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeQuitterJeu()))}/>
         </div>
     }
 }

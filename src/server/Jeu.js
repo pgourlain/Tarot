@@ -42,6 +42,7 @@ export default class Jeu {
         jeu.data.pliFait = [];//par joueur
 
         jeu.data.etat = Etats.FINI;
+        jeu.data.chat = "";
         jeu.prochainJeu();
         return jeu;
     }

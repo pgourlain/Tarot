@@ -146,19 +146,28 @@ export function createActionHandler(connection) {
                 sendToAll(jeu);
                 break;
             case Actions.QUITTER_JEU:
-                jeu.guids.forEach(joueur_guid => {
-                    delete known_guids[joueur_guid];
-                });
-                jeu.connections.forEach((connection) => {
-                    connection.sendUTF(JSON.stringify(ServerResponses.makeJeu(null)));
-                    connection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint([])));
-                });
-                jeux.splice(jeux.findIndex(j => j == jeu), 1);
+                if (jeu) {
+                    jeu.guids.forEach(joueur_guid => {
+                        delete known_guids[joueur_guid];
+                    });
+                    jeu.connections.forEach((connection) => {
+                        connection.sendUTF(JSON.stringify(ServerResponses.makeJeu(null)));
+                        connection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint([])));
+                    });
+                    jeux.splice(jeux.findIndex(j => j == jeu), 1);
+                }
                 break;
             case Actions.PROCHAIN_JEU:
-                console.log(jeu);
-                jeu.prochainJeu();
-                sendToAll(jeu);
+                if (jeu) {
+                    jeu.prochainJeu();
+                    sendToAll(jeu);
+                }
+                break;
+            case Actions.SEND_MESSAGE:
+                if (jeu) {
+                    jeu.data.chat = jeu.data.nomJoueurs[moi] + ": " + m.message.substring(0, 100).replace("\n", " ") + "\n" + jeu.data.chat;
+                    sendToAll(jeu);
+                }
                 break;
         }
     };
