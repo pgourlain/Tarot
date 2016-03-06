@@ -48,25 +48,25 @@ export default class Table extends Component {
             if (jeu.tourDe == this.props.moi) {
                 status = <b>Choisi une de tes cartes!</b>;
             } else {
-                status = <span>C'est le tour de joueur <Nom nom={jeu.nomJoueurs[jeu.tourDe]}/>. </span>;
+                status = <span>C’est le tour de joueur <Nom nom={jeu.nomJoueurs[jeu.tourDe]}/>. </span>;
             }
         } else if (jeu.etat == Etats.COUPER) {
             if (jeu.coupDe == this.props.moi) {
                 status = <b>Choisi le nombre de carte que tu veux couper!</b>;
             } else {
-                status = <span>C'est à <Nom nom={jeu.nomJoueurs[jeu.coupDe]}/> de couper. </span>;
+                status = <span>C’est à <Nom nom={jeu.nomJoueurs[jeu.coupDe]}/> de couper. </span>;
             }
         } else if (jeu.etat == Etats.QUI_PREND) {
             if (jeu.tourDe == this.props.moi) {
                 status = <b>Est-ce que tu veux prendre?</b>;
             } else {
-                status = <span>C'est le tour de joueur <Nom nom={jeu.nomJoueurs[jeu.tourDe]}/> à décider. </span>;
+                status = <span>C’est le tour de joueur <Nom nom={jeu.nomJoueurs[jeu.tourDe]}/> à décider. </span>;
             }
         } else if (jeu.etat == Etats.APPELER_ROI) {
             if (jeu.preneur == this.props.moi) {
                 status = <b>Appelle un roi!</b>;
             } else {
-                status = <span>C'est à <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> de choisir un roi. </span>;
+                status = <span>C’est à <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> de choisir un roi. </span>;
             }
         }
 

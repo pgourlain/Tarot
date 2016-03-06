@@ -92,7 +92,7 @@ export default class Tarot extends Component {
         } else {
             if (nextState.jeu != null) {
                 if (cestAmoi(nextState.jeu, this.state.moi) && ! cestAmoi(this.state.jeu, this.state.moi)) {
-                    notifyUser("C'est à toi!", "ding");
+                    notifyUser("C’est à toi!", "ding");
                 } else if (this.state.jeu.chat != nextState.jeu.chat) {
                     notifyUser("Nouveau chat!", "blop");
                 }
