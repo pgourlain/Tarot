@@ -62,7 +62,7 @@ export const ServerResponses = {
     makeJeu: (jeu) => ({type: ServerResponses.JEU, jeu}),
 
     JOUEUR_JOINT: "joueurJoint",
-    makeJoueurJoint: (joueurs) => ({type: ServerResponses.JOUEUR_JOINT, joueurs}),
+    makeJoueurJoint: (joueurs, guids) => ({type: ServerResponses.JOUEUR_JOINT, joueurs, guids}),
 
     REJOINDU: "rejoindu",
     makeRejoindu: (moi, joueurs) => ({type: ServerResponses.REJOINDU, moi, joueurs})

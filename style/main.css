@@ -25,9 +25,17 @@
 .chat {
     display: flex;
     flex-direction: column;
-    width: 300px;
+    width: 320px;
     height: 400px;
 }
 .chat textarea {
     flex-grow: 1;
+}
+
+@media (min-width: 1300px) {
+    .chat {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+    }
 }

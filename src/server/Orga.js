@@ -57,18 +57,20 @@ export function createActionHandler(connection) {
                     //TODO error
                     return;
                 }
-                if (joueur_attendant.findIndex(j => j.nomJoueur == m.nomJoueur) !== -1) {
+
+                const nomJoueur = m.nomJoueur.substring(0, 50);
+                if (joueur_attendant.findIndex(j => j.nomJoueur == nomJoueur) !== -1) {
                     // TODO error
                     return;
                 }
                 guid = m.guid;
-                joueur_attendant.push({guid, connection, nomJoueur: m.nomJoueur, startCallback: () => {
+                joueur_attendant.push({guid, connection, nomJoueur: nomJoueur, startCallback: () => {
                     jeu = known_guids[guid].jeu;
                     moi = joueur_attendant.findIndex(j => j.guid == guid);
                 }});
                 joueur_attendant.forEach(({connection}) => {
                     if (connection !== null)
-                        connection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint(getNomJoueurs())));
+                        connection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint(getNomJoueurs(), joueur_attendant.map(j => j.guid))));
                 });
                 break;
             case Actions.REJOINDRE: {
@@ -100,9 +102,9 @@ export function createActionHandler(connection) {
                 joueur_attendant.splice(index, 1);
                 joueur_attendant.forEach(({connection:jConnection}) => {
                     if (jConnection !== null)
-                        jConnection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint(getNomJoueurs())));
+                        jConnection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint(getNomJoueurs(), joueur_attendant.map(j => j.guid))));
                 });
-                connection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint(getNomJoueurs())));
+                connection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint(getNomJoueurs(), joueur_attendant.map(j => j.guid))));
                 break;
             }
             case Actions.START:
@@ -152,7 +154,7 @@ export function createActionHandler(connection) {
                     });
                     jeu.connections.forEach((connection) => {
                         connection.sendUTF(JSON.stringify(ServerResponses.makeJeu(null)));
-                        connection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint([])));
+                        connection.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint([], [])));
                     });
                     jeux.splice(jeux.findIndex(j => j == jeu), 1);
                 }
@@ -165,7 +167,7 @@ export function createActionHandler(connection) {
                 break;
             case Actions.SEND_MESSAGE:
                 if (jeu) {
-                    jeu.data.chat = jeu.data.nomJoueurs[moi] + ": " + m.message.substring(0, 100).replace("\n", " ") + "\n" + jeu.data.chat;
+                    jeu.data.chat = "" + new Date().toTimeString().substring(0, 8) + " " + jeu.data.nomJoueurs[moi] + ": " + m.message.substring(0, 100).replace("\n", " ") + "\n" + jeu.data.chat;
                     sendToAll(jeu);
                 }
                 break;

@@ -65,7 +65,7 @@ export default class Tarot extends Component {
                         this.setState({jeu: m.jeu});
                         break;
                     case ServerResponses.JOUEUR_JOINT: {
-                        const moi = m.joueurs.findIndex(nom => nom == this.state.nomJoueur);
+                        const moi = m.guids.findIndex(guid => guid == this.state.guid);
                         if (moi == -1) {
                             this.setState({joueurs: null, moi: null});
                         } else {
@@ -85,12 +85,14 @@ export default class Tarot extends Component {
     componentWillUpdate(nextProps, nextState) {
         if (this.state.jeu == null) {
             if (nextState.jeu != null) {
-                notifyUser("Le jeu a commencé!");
+                notifyUser("Le jeu a commencé!", "ding");
             }
         } else {
             if (nextState.jeu != null) {
                 if (cestAmoi(nextState.jeu, this.state.moi) && ! cestAmoi(this.state.jeu, this.state.moi)) {
-                    notifyUser("C'est à toi!");
+                    notifyUser("C'est à toi!", "ding");
+                } else if (this.state.jeu.chat != nextState.jeu.chat) {
+                    notifyUser("Nouveau chat!", "blop");
                 }
             }
         }
@@ -137,11 +139,11 @@ export default class Tarot extends Component {
     }
 }
 
-function notifyUser(text) {
+function notifyUser(text, sound) {
     if (pageActive) {
         return;
     }
-    var audio = new Audio('tarot/static/ding.mp3');
+    var audio = new Audio('tarot/static/' + sound + '.mp3');
     audio.play();
 }
 
