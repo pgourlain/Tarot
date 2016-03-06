@@ -8,6 +8,7 @@ import Table from './Table'
 import {Actions, ServerResponses} from '../datastructure'
 import {Etats} from '../server/Jeu'
 import Chat from './Chat'
+import Nom from './Nom';
 
 export default class Tarot extends Component {
     state = {
@@ -115,7 +116,7 @@ export default class Tarot extends Component {
                 </div>;
             } else {
                 return <div>
-                    {this.state.joueurs.length} joueurs: {this.state.joueurs.join(", ")}<br/>
+                    {this.state.joueurs.length} joueurs: <Nom nom={this.state.joueurs}/><br/>
                     <input type="button" value="Commencer le jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeStart()))}/>
                     <input type="button" value="Quitter" onClick={() => this.state.client.send(JSON.stringify(Actions.makeQuitter()))}/>
                     <Chat chat={this.state.chat_attendant} onSubmit={(message) => this.state.client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>

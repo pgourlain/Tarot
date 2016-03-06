@@ -2,6 +2,7 @@
 
 import React, {Component} from 'react';
 import Card from './Card';
+import Nom from './Nom';
 import CardStack from './CardStack';
 import {Etats} from '../server/Jeu'
 
@@ -26,14 +27,14 @@ export default class Table extends Component {
                 return <span key={i}/>
             }
             return <div key={i} className="stackinline">
-                Joueur {jeu.nomJoueurs[i]}:{" "}
+                Joueur <Nom nom={jeu.nomJoueurs[i]}/>:{" "}
                 <CardStack className="smallstack" cartes={cartesJoueur}/>
             </div>
         });
 
         const plisFait = jeu.pliFait.map((pli, i) => {
             return <div key={i} className="stackinline">
-                Plis joueur {jeu.nomJoueurs[i]}:{" "}
+                Plis joueur <Nom nom={jeu.nomJoueurs[i]}/>:{" "}
                 <CardStack className="smallstack" cartes={pli}/>
             </div>;
         });
@@ -43,31 +44,31 @@ export default class Table extends Component {
             if (jeu.tourDe == this.props.moi) {
                 status = <b>Choisi une de tes cartes!</b>;
             } else {
-                status = "C'est le tour de joueur " + jeu.nomJoueurs[jeu.tourDe] + ". ";
+                status = <span>C'est le tour de joueur <Nom nom={jeu.nomJoueurs[jeu.tourDe]}/>. </span>;
             }
         } else if (jeu.etat == Etats.COUPER) {
             if (jeu.coupDe == this.props.moi) {
                 status = <b>Choisi le nombre de carte que tu veux couper!</b>;
             } else {
-                status = "C'est à " + jeu.nomJoueurs[jeu.coupDe] + " de couper. ";
+                status = <span>C'est à <Nom nom={jeu.nomJoueurs[jeu.coupDe]}/> de couper. </span>;
             }
         } else if (jeu.etat == Etats.QUI_PREND) {
             if (jeu.tourDe == this.props.moi) {
                 status = <b>Est-ce que tu veux prendre!</b>;
             } else {
-                status = "C'est le tour de joueur " + jeu.nomJoueurs[jeu.tourDe] + " à décider. ";
+                status = <span>C'est le tour de joueur <Nom nom={jeu.nomJoueurs[jeu.tourDe]}/> à décider. </span>;
             }
         } else if (jeu.etat == Etats.APPELER_ROI) {
             if (jeu.preneur == this.props.moi) {
                 status = <b>Appelle un roi!</b>;
             } else {
-                status = "C'est à " + jeu.nomJoueurs[jeu.preneur] + " de choisir un roi. ";
+                status = <span>C'est à <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> de choisir un roi. </span>;
             }
         }
 
         return <div>
-            Tu es joueur {jeu.nomJoueurs[this.props.moi]}!
-            {jeu.preneur !== null ? " Joueur " + jeu.nomJoueurs[jeu.preneur] + " a pris. " : ""}
+            Tu es joueur <Nom nom={jeu.nomJoueurs[this.props.moi]}/>
+            {jeu.preneur !== null ? <span>Joueur <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> a pris. </span> : ""}
             {jeu.roiAppele !== null ? " Il a appele le roi de " + {"PR": "pique", "KR": "carreau", "TR": "trèfle", "CR": "cœur"}[jeu.roiAppele] + ". ": ""}
             <br/>
             <br/>
@@ -92,7 +93,7 @@ export default class Table extends Component {
             <div>
                 Pli:
                 <CardStack className="stack" cartes={jeu.pli}/>
-                {jeu.pli.map((p, i) => jeu.nomJoueurs[(jeu.tourDe + jeu.joueurs - (jeu.pli.length) + i) % jeu.joueurs]).join(", ")}
+                <Nom nom={jeu.pli.map((p, i) => jeu.nomJoueurs[(jeu.tourDe + jeu.joueurs - (jeu.pli.length) + i) % jeu.joueurs])}/>
             </div>
             <br/>
             {jeu.etat == Etats.APPELER_ROI ?
@@ -115,8 +116,8 @@ export default class Table extends Component {
             {plisFait}
             {jeu.resultat !== null ?
                 <div>
-                    {jeu.resultat.map((r, i) => <div key={i}>{jeu.nomJoueurs[i] + ": " + r}</div>)}
-                    Le preneur {jeu.nomJoueurs[jeu.preneur]} a besoin de {jeu.pointsNecessaire}.<br/>
+                    {jeu.resultat.map((r, i) => <div key={i}><Nom nom={jeu.nomJoueurs[i]}/>: {r}</div>)}
+                    Le preneur <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> a besoin de {jeu.pointsNecessaire}.<br/>
                     {jeu.preneurAGagne ? "Le preneur a gagné." : "Le preneur a perdu."}
                 </div>
                 : []}

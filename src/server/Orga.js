@@ -65,7 +65,7 @@ export function createActionHandler(connection) {
                     return;
                 }
 
-                const nomJoueur = m.nomJoueur.substring(0, 50);
+                const nomJoueur = m.nomJoueur.substring(0, 50).replace(/,/g, " ");
                 if (joueur_attendant.findIndex(j => j.nomJoueur == nomJoueur) !== -1) {
                     // TODO error
                     return;
@@ -182,7 +182,7 @@ export function createActionHandler(connection) {
     };
 
     function getChatMessage(name, message) {
-        return new Date().toTimeString().substring(0, 8) + " " + name + ": " + message.substring(0, 100).replace("\n", " ") + "\n";
+        return new Date().toTimeString().substring(0, 8) + " " + name + ": " + message.substring(0, 100).replace(/\n/g, " ") + "\n";
     }
 
     function getNomJoueurs() {
