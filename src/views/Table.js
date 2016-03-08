@@ -78,10 +78,10 @@ export default class Table extends Component {
             <br/>
             {status}
              {jeu.coupDe == this.props.moi ?
-                <div>
+                <form onSubmit={(e) => {e.preventDefault();this.props.onCouper(this.state.couperA)}}>
                     <input type="text" value={this.state.couperA} onChange={(e) => this.setState({couperA: Math.min(jeu.cartes.length, Math.max(0, e.target.value))})}/>
-                    <input type="button" value="Couper" onClick={() => this.props.onCouper(this.state.couperA)}/>
-                </div>
+                    <input type="button" value="Couper"/>
+                </form>
             :""}
             {jeu.etat == Etats.QUI_PREND && jeu.tourDe == this.props.moi ?
                 <div>

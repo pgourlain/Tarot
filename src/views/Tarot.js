@@ -110,10 +110,10 @@ export default class Tarot extends Component {
             if (this.state.client == null || this.state.client.readyState !== this.state.client.OPEN) {
                 return <span>Waiting for server...</span>
             } else if (this.state.joueurs == null) {
-                return <div>
+                return <form onSubmit={(e) => {e.preventDefault();this.state.client.send(JSON.stringify(Actions.makeJoindre(this.state.guid, this.state.nomJoueur)))}}>
                     <input type="text" value={this.state.nomJoueur} placeholder="Nom" onChange={(e) => {this.setState({nomJoueur: e.target.value});localStorage.setItem("nomJoueur", e.target.value);}}/>
-                    <input type="button" value="Joindre" onClick={() => this.state.client.send(JSON.stringify(Actions.makeJoindre(this.state.guid, this.state.nomJoueur)))}/>
-                </div>;
+                    <input type="submit" value="Joindre"/>
+                </form>;
             } else {
                 return <div>
                     {this.state.joueurs.length} joueurs: <Nom nom={this.state.joueurs}/><br/>
