@@ -184,7 +184,11 @@ wsServer.on('request', function(request) {
     });
 });
 
-process.on('SIGINT', () => save(saveFile, () => process.exit()));
+function saveAndExit() {
+    save(saveFile, () => process.exit());
+}
+process.on('SIGINT', saveAndExit);
+process.on('SIGTERM', saveAndExit);
 
 // A utility function to safely escape JSON for embedding in a <script> tag
 function safeStringify(obj) {
