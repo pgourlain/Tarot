@@ -95,7 +95,7 @@ export default class Table extends Component {
             <br/>
             <br/>
             <div>
-                L'écart:
+                L’écart:
                 <CardStack className="stack" cartes={jeu.pli}/>
                 <Nom nom={jeu.pli.map((p, i) => jeu.nomJoueurs[(jeu.tourDe + jeu.joueurs - (jeu.pli.length) + i) % jeu.joueurs])}/>
             </div>
