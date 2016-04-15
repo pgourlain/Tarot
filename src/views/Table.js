@@ -105,7 +105,7 @@ export default class Table extends Component {
                 :""}
             {jeu.chien.length != 0 ?
                 <div>
-                    Chien:
+                    Le chien:
                     <CardStack cartes={jeu.chien} onClick={(card) => this.props.onPlayCard(card)}/>
                 </div>
                 :""}
