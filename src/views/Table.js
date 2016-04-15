@@ -96,8 +96,10 @@ export default class Table extends Component {
             <br/>
             <div>
                 L’écart:
-                <CardStack className="stack" cartes={jeu.pli}/>
+                <CardStack className="stack" cartes={jeu.pli} onClick={(card) => this.props.onPlayCard(card)}/>
+                {jeu.etat != Etats.FAIRE_JEU ?
                 <Nom nom={jeu.pli.map((p, i) => jeu.nomJoueurs[(jeu.tourDe + jeu.joueurs - (jeu.pli.length) + i) % jeu.joueurs])}/>
+                    : ""}
             </div>
             <br/>
             {jeu.etat == Etats.APPELER_ROI ?

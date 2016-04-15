@@ -281,11 +281,11 @@ export default class Jeu {
         const dansCarte = this.data.cartesJoueurs[qui].findIndex((c) => c == carte);
         if (dansCarte != -1) {
             this.data.cartesJoueurs[qui].splice(dansCarte, 1);
-            this.data.chien.push(carte);
+            this.data.pli.push(carte);
         } else {
-            const dansChien = this.data.chien.findIndex((c) => c == carte);
-            if (dansChien != -1) {
-                this.data.chien.splice(dansChien, 1);
+            const dansEcart = this.data.pli.findIndex((c) => c == carte);
+            if (dansEcart != -1) {
+                this.data.pli.splice(dansEcart, 1);
                 this.data.cartesJoueurs[qui].push(carte);
                 this.data.cartesJoueurs[qui].sort(Jeu.ordreCartes);
             }
@@ -295,12 +295,12 @@ export default class Jeu {
     finiFaireJeu(qui) {
         if (this.data.etat != Etats.FAIRE_JEU ||
             qui != this.data.preneur ||
-            this.data.chien.length != Jeu.nombrePourChien(this.data.joueurs)) {
+            this.data.pli.length != Jeu.nombrePourChien(this.data.joueurs)) {
             //TODO error
             return;
         }
-        this.data.pliFait[qui] = this.data.chien;
-        this.data.chien = [];
+        this.data.pliFait[qui] = this.data.pli;
+        this.data.pli = [];
 
         this.data.etat = Etats.JEU;
     }
@@ -482,9 +482,12 @@ export default class Jeu {
 
     anonymize(qui) {
         let chien = this.data.chien;
-        if (this.data.etat != Etats.CHIEN_MONTREE &&
-            (this.data.etat != Etats.FAIRE_JEU || this.data.preneur != qui)) {
+        if (this.data.etat != Etats.CHIEN_MONTREE) {
             chien = chien.map(() => "--");
+        }
+        let pli = this.data.pli;
+        if (this.data.etat == Etats.FAIRE_JEU && this.data.preneur != qui) {
+            pli = pli.map(() => "--");
         }
         let cartesJoueurs = this.data.cartesJoueurs.map((cartes, i) => {
             if (i == qui) {
@@ -493,11 +496,14 @@ export default class Jeu {
                 return cartes.map(() => "--");
             }
         });
-        let pliFait = this.data.pliFait.map(
-            (cartes, i) => cartes.map((c, i) => this.data.dernierPli.findIndex(pc => pc == c) == -1 ? "--" : c)
-        );
+        let pliFait = this.data.pliFait;
+        if (this.data.dernierPli.length == 0) {
+            pliFait = pliFait.map((cartes, i) => this.data.preneur != i || qui != i ? cartes.map((c, i) => "--") : cartes);
+        } else {
+            pliFait = pliFait.map((cartes, i) => cartes.map((c, i) => this.data.dernierPli.findIndex(pc => pc == c) == -1 ? "--" : c));
+        }
         let cartes = this.data.cartes.map(() => "--");
-        return {...this.data, cartes, chien, cartesJoueurs, pliFait};
+        return {...this.data, pli, cartes, chien, cartesJoueurs, pliFait};
     }
 }
 
