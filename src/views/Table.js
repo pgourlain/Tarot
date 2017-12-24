@@ -1,6 +1,7 @@
 'use strict';
 
 import React, {Component} from 'react';
+import Proptypes from 'prop-types';
 import Card from './Card';
 import Nom from './Nom';
 import CardStack from './CardStack';
@@ -8,12 +9,12 @@ import {Etats} from '../server/Jeu'
 
 export default class Table extends Component {
     static propTypes = {
-        jeu: React.PropTypes.object.isRequired,
-        moi: React.PropTypes.number.isRequired,
-        onCouper: React.PropTypes.func.isRequired,
-        onPlayCard: React.PropTypes.func.isRequired,
-        onPrendsPasse: React.PropTypes.func.isRequired,
-        onFiniFaireJeu: React.PropTypes.func.isRequired
+        jeu: Proptypes.object.isRequired,
+        moi: Proptypes.number.isRequired,
+        onCouper: Proptypes.func.isRequired,
+        onPlayCard: Proptypes.func.isRequired,
+        onPrendsPasse: Proptypes.func.isRequired,
+        onFiniFaireJeu: Proptypes.func.isRequired
     };
     static defaultProps = {
     };

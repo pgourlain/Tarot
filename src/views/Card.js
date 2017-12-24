@@ -1,12 +1,13 @@
 'use strict';
 
 import React, {Component} from 'react';
+import Proptypes from 'prop-types';
 import Jeu from '../server/Jeu'
 
 export default class Card extends Component {
     static propTypes = {
-        card: React.PropTypes.string.isRequired,
-        onClick: React.PropTypes.func
+        card: Proptypes.string.isRequired,
+        onClick: Proptypes.func
     };
     static defaultProps = {
         card: "--",

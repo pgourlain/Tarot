@@ -1,13 +1,14 @@
 'use strict';
 
 import React, {Component} from 'react'
+import Proptypes from 'prop-types'
 
 import Card from './Card'
 
 export default class CardStack extends Component {
     static propTypes = {
-        cartes: React.PropTypes.array.isRequired,
-        onClick: React.PropTypes.func
+        cartes: Proptypes.array.isRequired,
+        onClick: Proptypes.func
     };
     static defaultProps = {
         cartes: [],
