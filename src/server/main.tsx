@@ -1,20 +1,21 @@
 "use strict";
 
-import http from 'http';
-import path from 'path';
-import crypto from 'crypto';
-import fs from 'fs';
+import * as http from 'http';
+import {IncomingMessage, ServerResponse} from 'http';
+import * as path from 'path';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
 
-import React from 'react';
-import ReactDOMServer from 'react-dom/server';
-import send from 'send';
-import connect from 'connect';
-import compression from 'compression';
-import systemdSocket from 'systemd-socket';
-import {server} from 'websocket'
-const WebSocketServer = server;
+import * as React from 'react';
+import * as ReactDOMServer from 'react-dom/server';
+import * as send from 'send';
+import * as connect from 'connect';
+import * as compression from 'compression';
+import * as systemdSocket from 'systemd-socket';
+import {server as WebSocketServer} from 'websocket'
 
-import {open, save, createActionHandler} from './Orga'
+import {createActionHandler, open, save} from './Orga'
+import {MessageAction} from "../datastructure";
 
 const jsFile = {content: "", hash: "", path: ""};
 let cssData = "";
@@ -24,7 +25,7 @@ const BUILD_DIR = process.env.NODE_ENV !== "production" ? "build-debug" : "build
 const PORT = 8181;
 const IMG_DIR = __dirname + "/../../img/";
 
-function loadJSFile(js, file) {
+function loadJSFile(js: { content: string, hash: string, path: string }, file: string) {
     fs.readFile(BUILD_DIR + "/" + file + ".js", 'utf8', (err, data) => {
         if (err) {
             console.error("Javascript file for browsernot found!");
@@ -38,7 +39,8 @@ function loadJSFile(js, file) {
         js.path = WEB_SERVER + "/static/" + file + "-" + js.hash.substring(0, 16) + ".js";
     });
 }
-function loadCSSFile(file) {
+
+function loadCSSFile(file: string) {
     fs.readFile(BUILD_DIR + "/" + file + ".css", 'utf8', (err, data) => {
         if (err) {
             console.log("ERROR: main.css not found");
@@ -47,6 +49,7 @@ function loadCSSFile(file) {
         cssData = data;
     });
 }
+
 function loadJSCSSFile() {
     loadJSFile(jsFile, "main");
     loadCSSFile("../style/main");
@@ -55,7 +58,7 @@ function loadJSCSSFile() {
 
 loadJSCSSFile();
 
-function serveJS(js, req, res) {
+function serveJS(js: { content: string, hash: string, path: string }, req: IncomingMessage, res: ServerResponse) {
     if (req.url == js.path) {
         if ("if-none-match" in req.headers) {
             res.writeHead(304);
@@ -70,9 +73,10 @@ function serveJS(js, req, res) {
         }
         return true;
     }
+    return false
 }
 
-function reactHandler(req, res) {
+function reactHandler(req: IncomingMessage, res: ServerResponse) {
     if (process.env.NODE_ENV !== "production") {
         loadJSCSSFile();
     }
@@ -80,28 +84,28 @@ function reactHandler(req, res) {
         return;
     }
 
-    if (req.url.startsWith(WEB_SERVER)) {
+    if (req.url && req.url.startsWith(WEB_SERVER)) {
         res.setHeader('Content-Type', 'text/html');
         res.setHeader("Cache-Control", 'no-transform,private,no-cache');
 
         //<meta name="theme-color" content="#4caf50"/>
         const html = "<!DOCTYPE html>" +
             ReactDOMServer.renderToStaticMarkup(<html lang="fr">
-                <head>
-                    <meta charSet="utf-8"/>
-                    <meta name="viewport" content="width=device-width"/>
-                    <meta httpEquiv="X-UA-Compatible" content="IE=edge"/>
-                    <link rel="icon" href={WEB_SERVER + "/img/icon.svg"}/>
-                    <link rel="icon" sizes="192x192" href={WEB_SERVER + "/img/icon.png"}/>
-                    <meta name="apple-mobile-web-app-capable" content="yes"/>
-                    <link rel="apple-touch-icon" href={WEB_SERVER + "/img/icon.png"}/>
-                    <style dangerouslySetInnerHTML={{__html: cssData}}/>
-                </head>
-                <body>
-                    <div id='content'/>
-                    <script src={jsFile.path}
-                            async="async"/>
-                </body>
+            <head>
+                <meta charSet="utf-8"/>
+                <meta name="viewport" content="width=device-width"/>
+                <meta httpEquiv="X-UA-Compatible" content="IE=edge"/>
+                <link rel="icon" href={WEB_SERVER + "/img/icon.svg"}/>
+                <link rel="icon" sizes="192x192" href={WEB_SERVER + "/img/icon.png"}/>
+                <meta name="apple-mobile-web-app-capable" content="yes"/>
+                <link rel="apple-touch-icon" href={WEB_SERVER + "/img/icon.png"}/>
+                <style dangerouslySetInnerHTML={{__html: cssData}}/>
+            </head>
+            <body>
+            <div id='content'/>
+            <script src={jsFile.path}
+                    async/>
+            </body>
             </html>);
 
         res.end(html);
@@ -111,10 +115,15 @@ function reactHandler(req, res) {
     }
 }
 
-function servestatic(req, res, next) {
-    function error(err) {
+function servestatic(req: IncomingMessage, res: ServerResponse, next: Function) {
+    function error(err: any) {
         console.log(err);
         next();
+    }
+
+    if (!req.url) {
+        error('Empty url')
+        return
     }
     if (req.url == "/" || req.url == "/tarot/") {
         next();
@@ -124,18 +133,19 @@ function servestatic(req, res, next) {
         .on('error', error)
         .pipe(res);
 }
+
 const app = connect();
-app.use((req, res, next) => {
+app.use((req: IncomingMessage, res: ServerResponse, next: Function) => {
     res.setHeader('Vary', 'Accept-Language');
     next();
 });
-app.use(compression());
+app.use(compression() as (req: IncomingMessage, res: ServerResponse, next: Function) => void);
 app.use(servestatic);
 app.use(reactHandler);
 
 const fdOrPort = systemdSocket() || PORT;
 const webserver = http.createServer(app);
-webserver.listen(fdOrPort, err => {
+webserver.listen(fdOrPort, (err: any) => {
     if (err) throw err;
     console.log('Listening on ' + fdOrPort + '...')
 });
@@ -150,7 +160,7 @@ const wsServer = new WebSocketServer({
     autoAcceptConnections: false
 });
 
-function originIsAllowed(origin) {
+function originIsAllowed(origin: string) {
     // TODO put logic here to detect whether the specified origin is allowed.
     return true;
 }
@@ -158,7 +168,7 @@ function originIsAllowed(origin) {
 const saveFile = "tarotjeux.json";
 open(saveFile);
 
-wsServer.on('request', function(request) {
+wsServer.on('request', function (request) {
     if (!originIsAllowed(request.origin)) {
         // Make sure we only accept requests from an allowed origin
         request.reject();
@@ -171,15 +181,15 @@ wsServer.on('request', function(request) {
 
     const actionHandler = createActionHandler(connection);
 
-    connection.on('message', function(message) {
-        if (message.type === 'utf8') {
+    connection.on('message', function (message) {
+        if (message.type === 'utf8' && message.utf8Data) {
             console.log('Received Message: ' + message.utf8Data);
-            const m = JSON.parse(message.utf8Data);
+            const m: MessageAction = JSON.parse(message.utf8Data);
             console.log(m);
             actionHandler(m);
         }
     });
-    connection.on('close', function(reasonCode, description) {
+    connection.on('close', function (reasonCode, description) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
     });
 });
@@ -187,11 +197,6 @@ wsServer.on('request', function(request) {
 function saveAndExit() {
     save(saveFile, () => process.exit());
 }
+
 process.on('SIGINT', saveAndExit);
 process.on('SIGTERM', saveAndExit);
-
-// A utility function to safely escape JSON for embedding in a <script> tag
-function safeStringify(obj) {
-    return JSON.stringify(obj).replace(/<\/script/g, '<\\/script').replace(/<!--/g, '<\\!--')
-}
-

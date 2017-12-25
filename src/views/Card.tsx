@@ -1,19 +1,18 @@
 'use strict';
 
-import React, {Component} from 'react';
-import Proptypes from 'prop-types';
+import * as React from 'react';
+import {Component} from 'react';
 import Jeu from '../server/Jeu'
+import {Card as CardEnum} from "../enums/Card";
 
-export default class Card extends Component {
-    static propTypes = {
-        card: Proptypes.string.isRequired,
-        onClick: Proptypes.func
-    };
-    static defaultProps = {
+export interface ICardProps {
+    card: CardEnum;
+    onClick?: (card: CardEnum) => void;
+}
+
+export default class Card extends Component<ICardProps> {
+    static defaultProps: ICardProps = {
         card: "--",
-        onClick: null
-    };
-    state = {
     };
     render() {
         let card = this.props.card;
@@ -30,24 +29,28 @@ export default class Card extends Component {
         return <div className="card" style={style} onClick={() => {if (this.props.onClick) this.props.onClick(this.props.card)}}/>;
     }
 
-    static findRowColumn(card) {
-        let row, column;
+    static findRowColumn(card: CardEnum): {row: number, column: number} {
         switch (card.substring(0, 1)) {
             case "J":
-                row = 1;
-                column = 7;
-                break;
+                return {
+                    row: 1,
+                    column: 7,
+                };
             case "A":
                 const atout = parseInt(card.substring(1));
                 if (atout <= 14) {
-                    row = 0;
-                    column = atout - 1;
+                    return {
+                        row: 0,
+                        column: atout - 1,
+                    };
                 } else {
-                    row = 1;
-                    column = atout - 15;
+                    return {
+                        row: 1,
+                        column: atout - 15,
+                    };
                 }
-                break;
             default:
+                let row: number | undefined;
                 switch (card.substring(0, 1)) {
                     case "P":
                         row = 2;
@@ -61,10 +64,13 @@ export default class Card extends Component {
                     case "T":
                         row = 5;
                         break;
+                    default:
+                        throw new Error('Invalid card: ' + card)
                 }
-                column = Jeu.cartesType[card.substring(1)];
-                break;
+                return {
+                    row: row,
+                    column: Jeu.cartesType[card.substring(1)],
+                };
         }
-        return {row: row, column: column};
     }
 }

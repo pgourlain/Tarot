@@ -1,23 +1,23 @@
 'use strict';
 
-import React, {Component} from 'react';
-import Proptypes from 'prop-types';
-import Card from './Card';
+import * as React from 'react';
+import {Component} from 'react';
 import Nom from './Nom';
 import CardStack from './CardStack';
 import {Etats} from '../server/Jeu'
+import {IData} from "../interfaces/IData";
+import {Card} from "../enums/Card";
 
-export default class Table extends Component {
-    static propTypes = {
-        jeu: Proptypes.object.isRequired,
-        moi: Proptypes.number.isRequired,
-        onCouper: Proptypes.func.isRequired,
-        onPlayCard: Proptypes.func.isRequired,
-        onPrendsPasse: Proptypes.func.isRequired,
-        onFiniFaireJeu: Proptypes.func.isRequired
-    };
-    static defaultProps = {
-    };
+export interface ITableProps {
+    jeu: IData;
+    moi: number;
+    onCouper: (count: number) => void;
+    onPlayCard: (card: Card) => void;
+    onPrendsPasse: (prendsPasse: boolean) => void;
+    onFiniFaireJeu: () => void;
+}
+
+export default class Table extends Component<ITableProps> {
     state = {
         couperA: 0
     };
@@ -40,7 +40,7 @@ export default class Table extends Component {
                     <CardStack className="smallstack" cartes={pli}/>
                 </div>;
             } else {
-                return <div/>;
+                return <div key={i}/>;
             }
         });
 
@@ -54,7 +54,7 @@ export default class Table extends Component {
         } else if (jeu.etat == Etats.COUPER) {
             if (jeu.coupDe == this.props.moi) {
                 status = <b>Choisi le nombre de carte que tu veux couper!</b>;
-            } else {
+            } else if (jeu.coupDe !== null) {
                 status = <span>C’est à <Nom nom={jeu.nomJoueurs[jeu.coupDe]}/> de couper. </span>;
             }
         } else if (jeu.etat == Etats.QUI_PREND) {
@@ -66,21 +66,22 @@ export default class Table extends Component {
         } else if (jeu.etat == Etats.APPELER_ROI) {
             if (jeu.preneur == this.props.moi) {
                 status = <b>Appelle un roi!</b>;
-            } else {
+            } else if (jeu.preneur !== null) {
                 status = <span>C’est à <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> de choisir un roi. </span>;
             }
         }
 
+        let colorToName: {[key: string]: string} = {"PR": "pique", "KR": "carreau", "TR": "trèfle", "CR": "cœur"};
         return <div>
             Tu es le joueur <Nom nom={jeu.nomJoueurs[this.props.moi]}/><br/>
             {jeu.preneur !== null ? <span>Joueur <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> a pris. </span> : ""}
-            {jeu.roiAppele !== null ? " Il a appele le roi de " + {"PR": "pique", "KR": "carreau", "TR": "trèfle", "CR": "cœur"}[jeu.roiAppele] + ". ": ""}
+            {jeu.roiAppele !== null ? " Il a appele le roi de " + colorToName[jeu.roiAppele] + ". ": ""}
             <br/>
             <br/>
             {status}
              {jeu.coupDe == this.props.moi ?
                 <form onSubmit={(e) => {e.preventDefault();this.props.onCouper(this.state.couperA)}}>
-                    <input type="text" value={this.state.couperA} onChange={(e) => this.setState({couperA: Math.min(jeu.cartes.length, Math.max(0, e.target.value))})}/>
+                    <input type="text" value={this.state.couperA} onChange={(e) => this.setState({couperA: Math.min(jeu.cartes.length, Math.max(0, Number(e.target.value)))})}/>
                     <input type="submit" value="Couper"/>
                 </form>
             :""}
@@ -121,7 +122,7 @@ export default class Table extends Component {
             {cartes}
             <br/>
             {plisFait}
-            {jeu.resultat !== null ?
+            {jeu.resultat !== null && jeu.preneur !== null ?
                 <div>
                     {jeu.resultat.map((r, i) => <div key={i}><Nom nom={jeu.nomJoueurs[i]}/>: {r}</div>)}
                     Le preneur <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> a besoin de {jeu.pointsNecessaire}.<br/>

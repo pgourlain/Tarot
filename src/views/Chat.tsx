@@ -1,11 +1,14 @@
 'use strict';
 
-import React, {Component} from 'react';
+import * as React from 'react';
+import {Component} from 'react';
 
-export default class Chat extends Component {
-    props = {
-        chat: ""
-    };
+export interface IChatProps {
+    chat: string;
+    onSubmit: (message: string) => void;
+}
+
+export default class Chat extends Component<IChatProps> {
     state = {
         chatmessage: ""
     };

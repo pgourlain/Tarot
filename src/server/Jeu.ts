@@ -1,48 +1,60 @@
-
 import {Tarot} from '../datastructure'
+import {IData} from "../interfaces/IData";
+import {connection} from "websocket";
+import {Card} from "../enums/Card";
+import {CardColor} from "../enums/CardColor";
 
-export const Etats = {
-    PAS_DE_JEU: "pasDeJeu",
-    COUPER: "Couper",
-    DISTRIBUER: "Distribuer",
-    APPELER_ROI: "AppelerRoi",
-    CHIEN_MONTREE: "chienMontree",
-    FAIRE_JEU: "faireJeu",
-    QUI_PREND: "QuiPrend",
-    MONTRE_CARTES: "montreCartes",
-    JEU: "Jeu",
-    FINI: "Fini"
-};
+export enum Etats {
+    PAS_DE_JEU = "pasDeJeu",
+    COUPER = "Couper",
+    DISTRIBUER = "Distribuer",
+    APPELER_ROI = "AppelerRoi",
+    CHIEN_MONTREE = "chienMontree",
+    FAIRE_JEU = "faireJeu",
+    QUI_PREND = "QuiPrend",
+    MONTRE_CARTES = "montreCartes",
+    JEU = "Jeu",
+    FINI = "Fini",
+}
 
 
 export default class Jeu {
-    data = {};
+    connections: connection[] = [];
 
-    connections = [];
-    guids = [];
+    public invalid = false;
 
-    constructor(data, guids) {
-        this.data = data;
-        this.guids = guids;
+    constructor(public data: IData, public guids: string[]) {
     }
 
-    static creeNouveauJeu(nomJoueurs) {
-        const jeu = new Jeu({}, []);
-        jeu.data.nomJoueurs = nomJoueurs;
-        jeu.data.joueurs = nomJoueurs.length;
-
-        jeu.data.premierTourDe = Math.floor(Math.random() * jeu.data.joueurs);
-
-        jeu.data.cartes = Tarot.cartes.slice(0); // 0 est en haut
-        shuffle(jeu.data.cartes);
-
-        jeu.data.cartesJoueurs = [];
-        jeu.data.chien = [];
-        jeu.data.pli = [];
-        jeu.data.pliFait = [];//par joueur
-
-        jeu.data.etat = Etats.FINI;
-        jeu.data.chat = "";
+    static creeNouveauJeu(nomJoueurs: string[]): Jeu {
+        const cartes = [...Tarot.cartes];
+        shuffle(cartes);
+        const premierTourDe = Math.floor(Math.random() * nomJoueurs.length);
+        const data: IData = {
+            nomJoueurs: nomJoueurs,
+            joueurs: nomJoueurs.length,
+            premierTourDe,
+            tourDe: premierTourDe,
+            cartes,
+            cartesJoueurs: [],
+            chien: [],
+            pli: [],
+            pliFait: [],
+            etat: Etats.FINI,
+            preneur: null,
+            roiAppele: null,
+            joueurAvecRoi: null,
+            dernierPli: [],
+            excuseDe: null,
+            excusePliFaitPar: null,
+            resultat: null,
+            pointsNecessaire: null,
+            preneurAGagne: null,
+            coupDe: null,
+            reponsePrisePasse: 0,
+            chat: "",
+        };
+        const jeu = new Jeu(data, []);
         jeu.prochainJeu();
         return jeu;
     }
@@ -79,14 +91,14 @@ export default class Jeu {
         this.data.preneurAGagne = null;
     }
 
-    coupe(nombre) {
+    coupe(nombre: number) {
         this.data.cartes = this.data.cartes.slice(nombre).concat(this.data.cartes.slice(0, nombre));
         this.data.coupDe = null;
 
         this.data.etat = Etats.DISTRIBUER;
     }
 
-    jePrendsPasse(qui, prends, callback) {
+    jePrendsPasse(qui: number, prends: boolean, callback: () => void) {
         if (this.data.etat != Etats.QUI_PREND || qui != this.data.tourDe) {
             //TODO error
             return;
@@ -114,9 +126,13 @@ export default class Jeu {
         callback();
     }
 
-    montreChien(callback) {
+    montreChien(callback: () => void) {
         this.data.etat = Etats.CHIEN_MONTREE;
         setTimeout(() => {
+            if (this.data.preneur === null) {
+                console.warn('MontreChien error: Preneur is not set');
+                return
+            }
             this.data.cartesJoueurs[this.data.preneur] = this.data.cartesJoueurs[this.data.preneur].concat(this.data.chien);
             this.data.cartesJoueurs[this.data.preneur].sort(Jeu.ordreCartes);
             this.data.chien = [];
@@ -125,9 +141,26 @@ export default class Jeu {
         }, 7000);
     }
 
-    static couleurs = {"P": 0, "K": 1, "T": 2, "C": 3, "A": 4};
-    static cartesType = {"1": 0, "2": 1, "3": 2, "4": 3, "5": 4, "6": 5, "7": 6, "8": 7, "9": 8, "10": 9, "V": 10, "C": 11, "D": 12, "R": 13};
-    static ordreCartes(a, b) {
+    // TODO enums for card color/types
+    static couleurs: { [key: string]: number } = {"P": 0, "K": 1, "T": 2, "C": 3, "A": 4};
+    static cartesType: { [key: string]: number } = {
+        "1": 0,
+        "2": 1,
+        "3": 2,
+        "4": 3,
+        "5": 4,
+        "6": 5,
+        "7": 6,
+        "8": 7,
+        "9": 8,
+        "10": 9,
+        "V": 10,
+        "C": 11,
+        "D": 12,
+        "R": 13
+    };
+
+    static ordreCartes(a: Card, b: Card) {
         if (a == "--" && b == "--") {
             return 0;
         }
@@ -148,12 +181,12 @@ export default class Jeu {
         }
     }
 
-    static cartePermis(carte, pli, cartes) {
+    static cartePermis(carte: Card, pli: Card[], cartes: Card[]) {
         if (carte == "J") {
             return true;
         }
-        let couleurMettre = null;
-        let hautAtout = null;
+        let couleurMettre: CardColor | null = null;
+        let hautAtout: number | null = null;
         pli.forEach((c) => {
             const couleur = c.substring(0, 1);
             if (couleur != "J") {
@@ -162,7 +195,7 @@ export default class Jeu {
                 }
                 if (couleur == "A") {
                     const atout = parseInt(c.substring(1));
-                    if (hautAtout == null || hautAtout < atout) {
+                    if (hautAtout === null || hautAtout < atout) {
                         hautAtout = atout;
                     }
                 }
@@ -175,7 +208,7 @@ export default class Jeu {
 
         const couleur = carte.substring(0, 1);
         if (couleur == couleurMettre) {
-            if (couleurMettre == "A") {
+            if (couleurMettre == "A" && hautAtout !== null) {
                 const atout = parseInt(carte.substr(1));
                 if (atout < hautAtout) {
                     for (const c of cartes) {
@@ -197,7 +230,7 @@ export default class Jeu {
         if (couleurMettre != "A") {
             for (const c of cartes) {
                 if (c.substr(0, 1) == "A") {
-                    if (couleur != "A") {
+                    if (couleur != "A" || hautAtout === null) {
                         return false;
                     }
                     const catout = parseInt(c.substr(1));
@@ -215,12 +248,9 @@ export default class Jeu {
         return true;
     }
 
-    static quiGagnePli(pli) {
-        let couleurMettre = null;
-        let hautAtout = null;
-
+    static quiGagnePli(pli: Card[]) {
         let pliPour = 0;
-        let carteHaute = null;
+        let carteHaute: Card | null = null;
         pli.forEach((c, i) => {
             const couleur = c.substring(0, 1);
             if (couleur != "J") {
@@ -254,7 +284,7 @@ export default class Jeu {
         return pliPour;
     }
 
-    carteClick(qui, carte, callback) {
+    carteClick(qui: number, carte: Card, callback: () => void) {
         if (this.data.etat == Etats.FAIRE_JEU) {
             this.faireJeu(qui, carte);
         } else if (this.data.etat == Etats.JEU) {
@@ -270,13 +300,14 @@ export default class Jeu {
         callback();
     }
 
-    faireJeu(qui, carte) {
+    faireJeu(qui: number, carte: Card) {
         if (this.data.etat != Etats.FAIRE_JEU || qui != this.data.preneur) {
             //TODO error
             return;
         }
         if (carte.substring(0, 1) == "A" || carte.substring(1) == "R") {
-            return false;
+            // TODO what does this check do?
+            return;
         }
         const dansCarte = this.data.cartesJoueurs[qui].findIndex((c) => c == carte);
         if (dansCarte != -1) {
@@ -292,7 +323,7 @@ export default class Jeu {
         }
     }
 
-    finiFaireJeu(qui) {
+    finiFaireJeu(qui: number) {
         if (this.data.etat != Etats.FAIRE_JEU ||
             qui != this.data.preneur ||
             this.data.pli.length != Jeu.nombrePourChien(this.data.joueurs)) {
@@ -305,7 +336,7 @@ export default class Jeu {
         this.data.etat = Etats.JEU;
     }
 
-    joueCarte(qui, carte, callback) {
+    joueCarte(qui: number, carte: Card, callback: () => void) {
         if (this.data.etat != Etats.JEU || qui != this.data.tourDe) {
             //TODO error
             return;
@@ -355,7 +386,7 @@ export default class Jeu {
 
                 this.essayDonnerCartePourExcuse();
 
-                if (this.data.cartesJoueurs[0].length == 0) {
+                if (this.data.cartesJoueurs[0].length == 0 && this.data.preneur !== null) {
                     this.data.etat = Etats.FINI;
                     this.data.resultat = this.data.pliFait.map((pli) => Jeu.compteCartes(pli));
                     const cartesPreneur = this.data.joueurAvecRoi === null ? this.data.pliFait[this.data.preneur] : this.data.pliFait[this.data.preneur].concat(this.data.pliFait[this.data.joueurAvecRoi]);
@@ -368,7 +399,7 @@ export default class Jeu {
     }
 
     essayDonnerCartePourExcuse() {
-        if (this.data.excuseDe == null) {
+        if (this.data.excuseDe === null || this.data.excusePliFaitPar === null) {
             return;
         }
         if (this.data.roiAppele !== null) {
@@ -398,11 +429,11 @@ export default class Jeu {
         }
     }
 
-    static compteCartes(cartes) {
+    static compteCartes(cartes: Card[]) {
         return cartes.reduce((count, c) => count + Jeu.pointsCarte(c), 0);
     }
 
-    static pointsCarte(carte) {
+    static pointsCarte(carte: Card) {
         if (carte == "J") {
             return 4.5;
         }
@@ -428,7 +459,7 @@ export default class Jeu {
         }
     }
 
-    static pointsNecessaire(cartes) {
+    static pointsNecessaire(cartes: Card[]) {
         const points = [56, 51, 41, 31];
         const bouts = cartes.reduce((count, c) => {
             switch (c) {
@@ -445,7 +476,7 @@ export default class Jeu {
         return points[bouts];
     }
 
-    static nombrePourChien(joueurs) {
+    static nombrePourChien(joueurs: number) {
         if (joueurs == 5) {
             return 3;
         } else {
@@ -453,8 +484,8 @@ export default class Jeu {
         }
     }
 
-    distribue(stepCallback) {
-        var dos = (prochain) => {
+    distribue(stepCallback: () => void) {
+        var dos = (prochain: number) => {
             if (this.data.cartes.length <= 0) {
                 this.data.etat = Etats.QUI_PREND;
                 stepCallback();
@@ -480,7 +511,7 @@ export default class Jeu {
         dos(this.data.tourDe);
     }
 
-    anonymize(qui) {
+    anonymize(qui: number): IData {
         let chien = this.data.chien;
         if (this.data.etat != Etats.CHIEN_MONTREE) {
             chien = chien.map(() => "--");
@@ -507,7 +538,7 @@ export default class Jeu {
     }
 }
 
-function shuffle(a) {
+function shuffle(a: Card[]) {
     var j, x, i;
     for (i = a.length; i; i -= 1) {
         j = Math.floor(Math.random() * i);

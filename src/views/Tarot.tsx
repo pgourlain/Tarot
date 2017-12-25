@@ -1,33 +1,49 @@
 'use strict';
 
-import React, {Component} from 'react'
-import {w3cwebsocket} from 'websocket'
-import uuid from 'uuid'
+import * as React from 'react'
+import {Component} from 'react'
+import * as websocket from 'websocket'
+import * as uuid from 'uuid'
 
 import Table from './Table'
-import {Actions, ServerResponses} from '../datastructure'
+import {Actions, MessageResponse, ServerResponses} from '../datastructure'
 import {Etats} from '../server/Jeu'
 import Chat from './Chat'
 import Nom from './Nom';
+import {IData} from "../interfaces/IData";
 
-export default class Tarot extends Component {
-    state = {
+const w3cwebsocket: typeof WebSocket = (websocket as any).w3cwebsocket;
+
+interface TarotState {
+    jeu: IData | null
+    client: WebSocket | null
+    moi: number | null
+    joueurs: string[] | null
+    guid: string
+    nomJoueur: string
+    chat_attendant: string
+}
+
+export default class Tarot extends Component<{}, TarotState> {
+    state: TarotState = {
         jeu: null,
         client: null,
         moi: null,
         joueurs: null,
-        guid: null,
+        guid: '',
         nomJoueur: "",
         chat_attendant: ""
     };
+
     componentWillMount() {
         const nomJoueur = localStorage.getItem("nomJoueur");
         if (nomJoueur) {
             this.setState({nomJoueur});
         }
         let guid;
-        if (localStorage.getItem("guid") !== null) {
-            guid = localStorage.getItem("guid");
+        const guidItem = localStorage.getItem("guid");
+        if (guidItem !== null) {
+            guid = guidItem;
         } else {
             guid = uuid.v4();
             localStorage.setItem("guid", guid);
@@ -35,11 +51,13 @@ export default class Tarot extends Component {
 
         this.setState({guid});
     }
+
     componentDidMount() {
         this.connectWebsocket();
     }
+
     connectWebsocket() {
-        const client = new w3cwebsocket((location.protocol == "http:" ? 'ws://' : "wss://")+ location.hostname + (location.port ? ':' + location.port : '') + '/tarot/ws/', 'tarot-protocol');
+        const client = new w3cwebsocket((location.protocol == "http:" ? 'ws://' : "wss://") + location.hostname + (location.port ? ':' + location.port : '') + '/tarot/ws/', 'tarot-protocol');
 
         client.onerror = () => {
             console.log('Connection Error');
@@ -61,7 +79,7 @@ export default class Tarot extends Component {
 
         client.onmessage = (e) => {
             if (typeof e.data === 'string') {
-                const m = JSON.parse(e.data);
+                const m: MessageResponse = JSON.parse(e.data);
                 console.log(m);
                 switch (m.type) {
                     case ServerResponses.JEU:
@@ -84,62 +102,80 @@ export default class Tarot extends Component {
             }
         };
     }
-    componentWillUpdate(nextProps, nextState) {
+
+    componentWillUpdate(nextProps: {}, nextState: TarotState) {
         if (this.state.jeu == null) {
             if (nextState.jeu != null) {
                 notifyUser("Le jeu a commencé!", "ding");
             }
         } else {
             if (nextState.jeu != null) {
-                if (cestAmoi(nextState.jeu, this.state.moi) && ! cestAmoi(this.state.jeu, this.state.moi)) {
+                const moi = this.state.moi;
+                if (moi !== null && cestAmoi(nextState.jeu, moi) && !cestAmoi(this.state.jeu, moi)) {
                     notifyUser("C’est à toi!", "ding");
                 } else if (this.state.jeu.chat != nextState.jeu.chat) {
                     notifyUser("Nouveau chat!", "blop");
                 }
             }
         }
-        function cestAmoi(jeu, moi) {
+
+        function cestAmoi(jeu: IData, moi: number) {
             return (jeu.etat == Etats.JEU && jeu.tourDe == moi) ||
                 (jeu.etat == Etats.COUPER && jeu.coupDe == moi) ||
                 (jeu.etat == Etats.QUI_PREND && jeu.tourDe == moi) ||
                 (jeu.etat == Etats.APPELER_ROI && jeu.preneur == moi);
         }
     }
+
     render() {
-        if (this.state.jeu == null) {
-            if (this.state.client == null || this.state.client.readyState !== this.state.client.OPEN) {
-                return <span>Waiting for server...</span>
-            } else if (this.state.joueurs == null) {
-                return <form onSubmit={(e) => {e.preventDefault();this.state.client.send(JSON.stringify(Actions.makeJoindre(this.state.guid, this.state.nomJoueur)))}}>
-                    <input type="text" value={this.state.nomJoueur} placeholder="Nom" onChange={(e) => {this.setState({nomJoueur: e.target.value});localStorage.setItem("nomJoueur", e.target.value);}}/>
+        const {client} = this.state;
+        if (client == null || client.readyState !== client.OPEN) {
+            return <span>Waiting for server...</span>
+        }
+        if (this.state.jeu == null || this.state.moi === null) {
+            if (this.state.joueurs == null) {
+                return <form onSubmit={(e) => {
+                    e.preventDefault();
+                    client.send(JSON.stringify(Actions.makeJoindre(this.state.guid, this.state.nomJoueur)))
+                }}>
+                    <input type="text" value={this.state.nomJoueur} placeholder="Nom" onChange={(e) => {
+                        this.setState({nomJoueur: e.target.value});
+                        localStorage.setItem("nomJoueur", e.target.value);
+                    }}/>
                     <input type="submit" value="Joindre"/>
                 </form>;
             } else {
                 return <div>
                     {this.state.joueurs.length} joueurs: <Nom nom={this.state.joueurs}/><br/>
-                    <input type="button" value="Commencer le jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeStart()))}/>
-                    <input type="button" value="Quitter" onClick={() => this.state.client.send(JSON.stringify(Actions.makeQuitter()))}/>
-                    <Chat chat={this.state.chat_attendant} onSubmit={(message) => this.state.client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
+                    <input type="button" value="Commencer le jeu"
+                           onClick={() => client.send(JSON.stringify(Actions.makeStart()))}/>
+                    <input type="button" value="Quitter"
+                           onClick={() => client.send(JSON.stringify(Actions.makeQuitter()))}/>
+                    <Chat chat={this.state.chat_attendant}
+                          onSubmit={(message) => client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
                 </div>;
             }
         }
 
         return <div>
             <Table jeu={this.state.jeu}
-                      moi={this.state.moi}
-                      onPlayCard={(card) => this.state.client.send(JSON.stringify(Actions.makeCarteClick(card)))}
-                      onCouper={(nombre) => this.state.client.send(JSON.stringify(Actions.makeCoupe(nombre)))}
-                      onPrendsPasse={(prends) => this.state.client.send(JSON.stringify(Actions.makePrendsPasse(prends)))}
-                      onFiniFaireJeu={() => this.state.client.send(JSON.stringify(Actions.makeFiniFaireJeu()))}
+                   moi={this.state.moi}
+                   onPlayCard={(card) => client.send(JSON.stringify(Actions.makeCarteClick(card)))}
+                   onCouper={(nombre) => client.send(JSON.stringify(Actions.makeCoupe(nombre)))}
+                   onPrendsPasse={(prends) => client.send(JSON.stringify(Actions.makePrendsPasse(prends)))}
+                   onFiniFaireJeu={() => client.send(JSON.stringify(Actions.makeFiniFaireJeu()))}
             />
-            {this.state.jeu.etat == Etats.FINI ? <input type="button" value="Prochain jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeProchainJeu()))}/> : ""}
-            <Chat chat={this.state.jeu.chat} onSubmit={(message) => this.state.client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
-            <input type="button" value="Fermer le jeu" onClick={() => this.state.client.send(JSON.stringify(Actions.makeQuitterJeu()))}/>
+            {this.state.jeu.etat == Etats.FINI ? <input type="button" value="Prochain jeu"
+                                                        onClick={() => client.send(JSON.stringify(Actions.makeProchainJeu()))}/> : ""}
+            <Chat chat={this.state.jeu.chat}
+                  onSubmit={(message) => client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
+            <input type="button" value="Fermer le jeu"
+                   onClick={() => client.send(JSON.stringify(Actions.makeQuitterJeu()))}/>
         </div>
     }
 }
 
-function notifyUser(text, sound) {
+function notifyUser(text: string, sound: string) {
     if (pageActive) {
         return;
     }

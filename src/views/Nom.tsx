@@ -1,9 +1,14 @@
 'use strict';
 
-import React, {Component} from 'react';
+import * as React from 'react';
+import {Component} from 'react';
 
-export default class Nom extends Component {
-    static defaultProps = {
+export interface INomProps {
+    nom: string | string[];
+    divider?: string;
+}
+export default class Nom extends Component<INomProps> {
+    static defaultProps: INomProps = {
         nom: [],
         divider: ", "
     };
