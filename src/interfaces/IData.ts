@@ -1,5 +1,5 @@
-import {Etats} from "../server/Jeu";
-import {Card} from "../enums/Card";
+import {Card} from '../enums/Card';
+import {Etats} from '../server/Jeu';
 
 export interface IData {
     nomJoueurs: string[];
@@ -9,7 +9,7 @@ export interface IData {
     cartesJoueurs: Card[][];
     chien: Card[];
     pli: Card[];
-    pliFait: Card[][];//par joueur
+    pliFait: Card[][]; // par joueur
     etat: Etats;
     chat: string;
     tourDe: number;

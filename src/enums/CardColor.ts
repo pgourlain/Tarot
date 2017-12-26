@@ -1,1 +1,1 @@
-export type CardColor = string
+export type CardColor = string;

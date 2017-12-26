@@ -44,6 +44,7 @@
     "less-plugin-npm-import": "~2.1.0",
     "normalize.css": "~7.0.0",
     "tsify": "^3.0.4",
+    "tslint": "^5.8.0",
     "typescript": "^2.6.2",
     "uglify-js": "~3.3.2",
     "vinyl-source-stream": "~2.0.0",
@@ -58,7 +59,9 @@
     "buildServer": "tsc --project .",
     "startServer": "node lib/server/main.js",
     "buildStartServer": "npm run buildServer && npm run startServer",
-    "startProductionServer": "NODE_ENV=production npm run startServer"
+    "startProductionServer": "NODE_ENV=production npm run startServer",
+    "lint": "tslint --project . --force",
+    "lint-fix": "tslint --project . --fix --force"
   },
   "browserify": {
     "transform": [

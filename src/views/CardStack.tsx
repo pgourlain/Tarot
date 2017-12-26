@@ -1,10 +1,7 @@
-'use strict';
-
-import * as React from 'react'
-import {Component} from 'react'
-
-import Card from './Card'
-import {Card as CardEnum} from "../enums/Card";
+import * as React from 'react';
+import {Component} from 'react';
+import {Card as CardEnum} from '../enums/Card';
+import Card from './Card';
 
 export interface ICardStackProps {
     cartes: CardEnum[];
@@ -13,13 +10,13 @@ export interface ICardStackProps {
 }
 
 export default class CardStack extends Component<ICardStackProps> {
-    static defaultProps: ICardStackProps = {
+    public static defaultProps: ICardStackProps = {
         cartes: [],
     };
 
-    render() {
+    public render() {
         const {cartes, onClick, ...forwardProps} = this.props;
-        const cardStack = cartes.map((carte, i) => <Card key={carte == "--" ? i : carte} card={carte}
+        const cardStack = cartes.map((carte, i) => <Card key={carte === '--' ? i : carte} card={carte}
                                                          onClick={onClick}/>);
         return <div {...forwardProps}>
             {cardStack}

@@ -6,4 +6,5 @@ lib/
 *~
 build/
 build-debug/
-.idea/
+.idea/*
+!.idea/codeStyles/

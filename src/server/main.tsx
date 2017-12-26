@@ -1,49 +1,44 @@
-"use strict";
-
-import * as http from 'http';
-import {IncomingMessage, ServerResponse} from 'http';
-import * as path from 'path';
-import * as crypto from 'crypto';
-import * as fs from 'fs';
-
-import * as React from 'react';
-import * as ReactDOMServer from 'react-dom/server';
-import * as send from 'send';
-import * as connect from 'connect';
 import * as compression from 'compression';
+import * as connect from 'connect';
+import {createHash} from 'crypto';
+import {readFile} from 'fs';
+import {createServer, IncomingMessage, ServerResponse} from 'http';
+import {basename} from 'path';
+import * as React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import * as send from 'send';
 import * as systemdSocket from 'systemd-socket';
-import {server as WebSocketServer} from 'websocket'
+import {server as WebSocketServer} from 'websocket';
+import {Action} from '../datastructure/actions';
+import {createActionHandler, open, save} from './Orga';
 
-import {createActionHandler, open, save} from './Orga'
-import {MessageAction} from "../datastructure";
+const jsFile = {content: '', hash: '', path: ''};
+let cssData = '';
 
-const jsFile = {content: "", hash: "", path: ""};
-let cssData = "";
-
-const WEB_SERVER = "/tarot";
-const BUILD_DIR = process.env.NODE_ENV !== "production" ? "build-debug" : "build";
+const WEB_SERVER = '/tarot';
+const BUILD_DIR = process.env.NODE_ENV !== 'production' ? 'build-debug' : 'build';
 const PORT = 8181;
-const IMG_DIR = __dirname + "/../../img/";
+const IMG_DIR = __dirname + '/../../img/';
 
 function loadJSFile(js: { content: string, hash: string, path: string }, file: string) {
-    fs.readFile(BUILD_DIR + "/" + file + ".js", 'utf8', (err, data) => {
+    readFile(BUILD_DIR + '/' + file + '.js', 'utf8', (err, data) => {
         if (err) {
-            console.error("Javascript file for browsernot found!");
+            console.error('Javascript file for browsernot found!');
             return;
         }
 
         js.content = data;
-        const shasum = crypto.createHash('sha1');
+        const shasum = createHash('sha1');
         shasum.update(js.content);
         js.hash = shasum.digest('hex');
-        js.path = WEB_SERVER + "/static/" + file + "-" + js.hash.substring(0, 16) + ".js";
+        js.path = WEB_SERVER + '/static/' + file + '-' + js.hash.substring(0, 16) + '.js';
     });
 }
 
 function loadCSSFile(file: string) {
-    fs.readFile(BUILD_DIR + "/" + file + ".css", 'utf8', (err, data) => {
+    readFile(BUILD_DIR + '/' + file + '.css', 'utf8', (err, data) => {
         if (err) {
-            console.log("ERROR: main.css not found");
+            console.error('ERROR: main.css not found');
             return;
         }
         cssData = data;
@@ -51,33 +46,33 @@ function loadCSSFile(file: string) {
 }
 
 function loadJSCSSFile() {
-    loadJSFile(jsFile, "main");
-    loadCSSFile("../style/main");
-    console.log("Loaded js and css file");
+    loadJSFile(jsFile, 'main');
+    loadCSSFile('../style/main');
+    console.info('Loaded js and css file');
 }
 
 loadJSCSSFile();
 
 function serveJS(js: { content: string, hash: string, path: string }, req: IncomingMessage, res: ServerResponse) {
-    if (req.url == js.path) {
-        if ("if-none-match" in req.headers) {
+    if (req.url === js.path) {
+        if ('if-none-match' in req.headers) {
             res.writeHead(304);
             res.end();
         } else {
             res.writeHead(200, {
-                'Content-Type': "text/javascript",
-                'Cache-Control': "max-age=31536000",
-                "ETag": "yes:)"
+                'Cache-Control': 'max-age=31536000',
+                'Content-Type': 'text/javascript',
+                'ETag': 'yes:)',
             });
             res.end(js.content);
         }
         return true;
     }
-    return false
+    return false;
 }
 
 function reactHandler(req: IncomingMessage, res: ServerResponse) {
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== 'production') {
         loadJSCSSFile();
     }
     if (serveJS(jsFile, req, res)) {
@@ -86,23 +81,23 @@ function reactHandler(req: IncomingMessage, res: ServerResponse) {
 
     if (req.url && req.url.startsWith(WEB_SERVER)) {
         res.setHeader('Content-Type', 'text/html');
-        res.setHeader("Cache-Control", 'no-transform,private,no-cache');
+        res.setHeader('Cache-Control', 'no-transform,private,no-cache');
 
-        //<meta name="theme-color" content="#4caf50"/>
-        const html = "<!DOCTYPE html>" +
-            ReactDOMServer.renderToStaticMarkup(<html lang="fr">
+        // <meta name="theme-color" content="#4caf50"/>
+        const html = '<!DOCTYPE html>' +
+            renderToStaticMarkup(<html lang="fr">
             <head>
                 <meta charSet="utf-8"/>
                 <meta name="viewport" content="width=device-width"/>
                 <meta httpEquiv="X-UA-Compatible" content="IE=edge"/>
-                <link rel="icon" href={WEB_SERVER + "/img/icon.svg"}/>
-                <link rel="icon" sizes="192x192" href={WEB_SERVER + "/img/icon.png"}/>
+                <link rel="icon" href={WEB_SERVER + '/img/icon.svg'}/>
+                <link rel="icon" sizes="192x192" href={WEB_SERVER + '/img/icon.png'}/>
                 <meta name="apple-mobile-web-app-capable" content="yes"/>
-                <link rel="apple-touch-icon" href={WEB_SERVER + "/img/icon.png"}/>
+                <link rel="apple-touch-icon" href={WEB_SERVER + '/img/icon.png'}/>
                 <style dangerouslySetInnerHTML={{__html: cssData}}/>
             </head>
             <body>
-            <div id='content'/>
+            <div id="content"/>
             <script src={jsFile.path}
                     async/>
             </body>
@@ -111,25 +106,25 @@ function reactHandler(req: IncomingMessage, res: ServerResponse) {
         res.end(html);
     } else {
         res.statusCode = 404;
-        res.end('Not found')
+        res.end('Not found');
     }
 }
 
 function servestatic(req: IncomingMessage, res: ServerResponse, next: Function) {
     function error(err: any) {
-        console.log(err);
+        console.error(err);
         next();
     }
 
     if (!req.url) {
-        error('Empty url')
-        return
+        error('Empty url');
+        return;
     }
-    if (req.url == "/" || req.url == "/tarot/") {
+    if (req.url === '/' || req.url === '/tarot/') {
         next();
         return;
     }
-    send(req, path.basename(decodeURI(req.url)), {root: IMG_DIR, maxAge: 86400000})
+    send(req, basename(decodeURI(req.url)), {root: IMG_DIR, maxAge: 86400000})
         .on('error', error)
         .pipe(res);
 }
@@ -144,20 +139,22 @@ app.use(servestatic);
 app.use(reactHandler);
 
 const fdOrPort = systemdSocket() || PORT;
-const webserver = http.createServer(app);
+const webserver = createServer(app);
 webserver.listen(fdOrPort, (err: any) => {
-    if (err) throw err;
-    console.log('Listening on ' + fdOrPort + '...')
+    if (err) {
+        throw err;
+    }
+    console.info('Listening on ' + fdOrPort + '...');
 });
 
 const wsServer = new WebSocketServer({
-    httpServer: webserver,
     // You should not use autoAcceptConnections for production
     // applications, as it defeats all standard cross-origin protection
     // facilities built into the protocol and the browser.  You should
     // *always* verify the connection's origin and decide whether or not
     // to accept it.
-    autoAcceptConnections: false
+    autoAcceptConnections: false,
+    httpServer: webserver,
 });
 
 function originIsAllowed(origin: string) {
@@ -165,32 +162,32 @@ function originIsAllowed(origin: string) {
     return true;
 }
 
-const saveFile = "tarotjeux.json";
+const saveFile = 'tarotjeux.json';
 open(saveFile);
 
-wsServer.on('request', function (request) {
+wsServer.on('request', request => {
     if (!originIsAllowed(request.origin)) {
         // Make sure we only accept requests from an allowed origin
         request.reject();
-        console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
+        console.debug((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
         return;
     }
 
-    var connection = request.accept('tarot-protocol', request.origin);
-    console.log((new Date()) + ' Connection accepted.');
+    const connection = request.accept('tarot-protocol', request.origin);
+    console.debug((new Date()) + ' Connection accepted.');
 
     const actionHandler = createActionHandler(connection);
 
-    connection.on('message', function (message) {
+    connection.on('message', message => {
         if (message.type === 'utf8' && message.utf8Data) {
-            console.log('Received Message: ' + message.utf8Data);
-            const m: MessageAction = JSON.parse(message.utf8Data);
-            console.log(m);
+            console.debug('Received Message: ' + message.utf8Data);
+            const m: Action = JSON.parse(message.utf8Data);
+            console.debug(m);
             actionHandler(m);
         }
     });
-    connection.on('close', function (reasonCode, description) {
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+    connection.on('close', (reasonCode, description) => {
+        console.debug((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected:', reasonCode, description);
     });
 });
 

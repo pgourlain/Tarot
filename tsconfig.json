@@ -8,7 +8,7 @@
     "noUnusedLocals": true,
     "noFallthroughCasesInSwitch": true,
     "module": "commonjs",
-    "target": "es5",
+    "target": "es6",
     "lib": [
       "es6",
       "dom"

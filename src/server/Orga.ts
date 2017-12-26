@@ -1,162 +1,181 @@
-import * as fs from 'fs';
-
-import {Actions, MessageAction, ServerResponses} from '../datastructure'
-import Jeu from './Jeu'
-import {IData} from "../interfaces/IData";
-import {connection} from "websocket";
+import {readFile, writeFile} from 'fs';
+import {connection as WebsocketConnection} from 'websocket';
+import {Action, Actions} from '../datastructure/actions';
+import {ServerResponses} from '../datastructure/responses';
+import {IData} from '../interfaces/IData';
+import Jeu from './Jeu';
 
 interface ISavedGame {
-    jeux: { jeuData: IData, guids: string[] }[];
+    jeux: Array<{ jeuData: IData, guids: string[] }>;
     known_guids: { [guid: string]: { jeuId: number, joueur: number } };
-    joueur_attendant: { guid: string, nomJoueur: string }[];
+    joueur_attendant: Array<{ guid: string, nomJoueur: string }>;
     chat_attendant: string;
+}
+
+interface IJoueur {
+    guid: string;
+    connection?: WebsocketConnection;
+    nomJoueur: string;
+    startCallback?: () => void | null;
 }
 
 const jeux: Jeu[] = [];
 
-let known_guids: { [guid: string]: { jeu: Jeu, joueur: number } } = {};
+let knownGuids: { [guid: string]: { jeu: Jeu, joueur: number } } = {};
 
-let joueur_attendant: { guid: string, connection?: connection, nomJoueur: string, startCallback?: () => void | null }[] = [];
-let chat_attendant = "";
+let joueurAttendant: IJoueur[] = [];
+let chatAttendant = '';
 
 export function save(file: string, callback: () => void) {
-    const saved_known_guids: ISavedGame["known_guids"] = {};
-    for (let guid in known_guids) {
-        if (known_guids.hasOwnProperty(guid)) {
-            saved_known_guids[guid] = {
-                jeuId: jeux.findIndex(j => j === known_guids[guid].jeu),
-                joueur: known_guids[guid].joueur,
-            }
+    const savedKnownGuids: ISavedGame['known_guids'] = {};
+    for (const guid in knownGuids) {
+        if (knownGuids.hasOwnProperty(guid)) {
+            savedKnownGuids[guid] = {
+                jeuId: jeux.findIndex(j => j === knownGuids[guid].jeu),
+                joueur: knownGuids[guid].joueur,
+            };
         }
     }
     const data: ISavedGame = {
+        chat_attendant: chatAttendant,
         jeux: jeux.map(jeu => ({jeuData: jeu.data, guids: jeu.guids})),
-        known_guids: saved_known_guids,
-        joueur_attendant: joueur_attendant.map(j => ({...j, startCallback: null, connection: null})),
-        chat_attendant
+        joueur_attendant: joueurAttendant.map(j => ({...j, startCallback: null, connection: null})),
+        known_guids: savedKnownGuids,
     };
-    fs.writeFile(file, JSON.stringify(data), (err) => {
-        if (err) throw err;
-        if (callback) callback();
+    writeFile(file, JSON.stringify(data), err => {
+        if (err) {
+            throw err;
+        }
+        if (callback) {
+            callback();
+        }
     });
 }
 
 export function open(file: string, callback?: () => void) {
-    fs.readFile(file, (err, content) => {
+    readFile(file, (err, content) => {
         if (!err) {
             const data: ISavedGame = JSON.parse(content.toString());
             data.jeux.forEach(({jeuData, guids}) => jeux.push(new Jeu(jeuData, guids)));
-            const loaded_known_guids: typeof known_guids = {};
-            for (let guid in data.known_guids) {
+            const loadedKnownGuids: typeof knownGuids = {};
+            for (const guid in data.known_guids) {
                 if (data.known_guids.hasOwnProperty(guid)) {
-                    loaded_known_guids[guid] = {
+                    loadedKnownGuids[guid] = {
                         jeu: jeux[data.known_guids[guid].jeuId],
                         joueur: data.known_guids[guid].joueur,
-                    }
+                    };
                 }
             }
-            known_guids = loaded_known_guids;
-            joueur_attendant = data.joueur_attendant;
-            chat_attendant = data.chat_attendant;
+            knownGuids = loadedKnownGuids;
+            joueurAttendant = data.joueur_attendant;
+            chatAttendant = data.chat_attendant;
         }
-        if (callback) callback();
+        if (callback) {
+            callback();
+        }
     });
 }
 
-export function createActionHandler(connection: connection) {
+export function createActionHandler(connection: WebsocketConnection) {
     let jeu: Jeu | null = null;
     let guid: string | null = null;
     let moi: number | null = null;
-    return (m: MessageAction) => {
+    return (m: Action) => {
         if (jeu && jeu.invalid) {
             jeu = null;
             moi = null;
         }
         switch (m.type) {
-            case Actions.JOINDRE:
-                if (joueur_attendant.length >= 5) {
-                    console.log("too many players");
-                    //TODO error
+            case Actions.JOINDRE: {
+                if (joueurAttendant.length >= 5) {
+                    console.warn('too many players');
+                    // TODO error
                     return;
                 }
 
-                const nomJoueur = m.nomJoueur.substring(0, 50).replace(/,/g, " ");
-                if (joueur_attendant.findIndex(j => j.nomJoueur == nomJoueur) !== -1) {
-                    console.log("player name already exists");
+                const nomJoueur = m.nomJoueur.substring(0, 50).replace(/,/g, ' ');
+                if (joueurAttendant.findIndex(j => j.nomJoueur === nomJoueur) !== -1) {
+                    console.warn('player name already exists');
                     // TODO error
                     return;
                 }
                 const newGuid = m.guid;
-                joueur_attendant.push({
-                    guid: newGuid, connection, nomJoueur: nomJoueur, startCallback: () => {
-                        jeu = known_guids[newGuid].jeu;
-                        moi = joueur_attendant.findIndex(j => j.guid == newGuid);
-                    }
+                joueurAttendant.push({
+                    connection,
+                    guid: newGuid,
+                    nomJoueur,
+                    startCallback: () => {
+                        jeu = knownGuids[newGuid].jeu;
+                        moi = joueurAttendant.findIndex(j => j.guid === newGuid);
+                    },
                 });
                 guid = newGuid;
-                joueur_attendant.forEach(({connection}) => sendJoueurs(connection));
+                joueurAttendant.forEach(({connection: joueurConnection}) => sendJoueurs(joueurConnection));
                 break;
+            }
             case Actions.REJOINDRE: {
-                const index = joueur_attendant.findIndex(j => j.guid == m.guid);
-                if (index != -1) {
+                const index = joueurAttendant.findIndex(j => j.guid === m.guid);
+                if (index !== -1) {
                     const newGuid = m.guid;
-                    joueur_attendant[index].connection = connection;
-                    joueur_attendant[index].startCallback = () => {
-                        jeu = known_guids[newGuid].jeu;
-                        moi = joueur_attendant.findIndex(j => j.guid == newGuid);
+                    joueurAttendant[index].connection = connection;
+                    joueurAttendant[index].startCallback = () => {
+                        jeu = knownGuids[newGuid].jeu;
+                        moi = joueurAttendant.findIndex(j => j.guid === newGuid);
                     };
                     guid = newGuid;
                     sendJoueurs(connection);
-                } else if (m.guid in known_guids) {
+                } else if (m.guid in knownGuids) {
                     guid = m.guid;
-                    moi = known_guids[guid].joueur;
-                    jeu = known_guids[guid].jeu;
+                    moi = knownGuids[guid].joueur;
+                    jeu = knownGuids[guid].jeu;
                     jeu.connections[moi] = connection;
                     connection.sendUTF(JSON.stringify(ServerResponses.makeRejoindu(moi)));
                     sendToAll(jeu);
                 } else {
-                    //TODO error
+                    // TODO error
                     return;
                 }
                 break;
             }
             case Actions.QUITTER: {
-                const index = joueur_attendant.findIndex(j => j.guid == guid);
-                if (index == -1) return;
-                joueur_attendant.splice(index, 1);
-                joueur_attendant.forEach(({connection}) => sendJoueurs(connection));
+                const index = joueurAttendant.findIndex(j => j.guid === guid);
+                if (index === -1) {
+                    return;
+                }
+                joueurAttendant.splice(index, 1);
+                joueurAttendant.forEach(({connection: joueurConnection}) => sendJoueurs(joueurConnection));
                 sendJoueurs(connection);
                 break;
             }
             case Actions.START:
-                if (joueur_attendant.length < 3) {
-                    console.log("not enough player");
-                    //TODO error
+                if (joueurAttendant.length < 3) {
+                    console.warn('not enough player');
+                    // TODO error
                     return;
                 }
                 const newJeu = Jeu.creeNouveauJeu(getNomJoueurs());
                 jeux.push(newJeu);
-                joueur_attendant.forEach(({guid: joueur_guid, connection}, i) => {
-                    known_guids[joueur_guid] = {jeu: newJeu, joueur: i};
-                    if (connection != null) {
-                        newJeu.connections[i] = connection;
+                joueurAttendant.forEach(({guid: joueurGuid, connection: joueurConnection}, i) => {
+                    knownGuids[joueurGuid] = {jeu: newJeu, joueur: i};
+                    if (joueurConnection != null) {
+                        newJeu.connections[i] = joueurConnection;
                     }
-                    newJeu.guids.push(joueur_guid);
+                    newJeu.guids.push(joueurGuid);
                 });
-                joueur_attendant.forEach(({startCallback}, i) => {
+                joueurAttendant.forEach(({startCallback}, i) => {
                     if (startCallback != null) {
                         startCallback();
                     }
                 });
-                joueur_attendant = [];
-                newJeu.data.chat = chat_attendant;
-                chat_attendant = "";
+                joueurAttendant = [];
+                newJeu.data.chat = chatAttendant;
+                chatAttendant = '';
                 sendToAll(newJeu);
                 jeu = newJeu;
                 break;
             case Actions.COUPE:
                 if (!jeu) {
-                    console.warn("Action non permis, jeu pas commencé");
+                    console.warn('Action non permis, jeu pas commencé');
                     return;
                 }
                 jeu.coupe(m.nombre);
@@ -170,7 +189,7 @@ export function createActionHandler(connection: connection) {
                 break;
             case Actions.PRENDS_PASSE:
                 if (!jeu || moi === null) {
-                    console.warn("Action non permis, jeu pas commencé");
+                    console.warn('Action non permis, jeu pas commencé');
                     return;
                 }
                 jeu.jePrendsPasse(moi, m.prends, () => {
@@ -182,7 +201,7 @@ export function createActionHandler(connection: connection) {
                 break;
             case Actions.CARTE_CLICK:
                 if (!jeu || moi === null) {
-                    console.warn("Action non permis, jeu pas commencé");
+                    console.warn('Action non permis, jeu pas commencé');
                     return;
                 }
                 jeu.carteClick(moi, m.carte, () => {
@@ -194,7 +213,7 @@ export function createActionHandler(connection: connection) {
                 break;
             case Actions.FINI_FAIRE_JEU:
                 if (!jeu || moi === null) {
-                    console.warn("Action non permis, jeu pas commencé");
+                    console.warn('Action non permis, jeu pas commencé');
                     return;
                 }
                 jeu.finiFaireJeu(moi);
@@ -202,14 +221,14 @@ export function createActionHandler(connection: connection) {
                 break;
             case Actions.QUITTER_JEU:
                 if (jeu) {
-                    jeu.guids.forEach(joueur_guid => {
-                        delete known_guids[joueur_guid];
+                    jeu.guids.forEach(joueurGuid => {
+                        delete knownGuids[joueurGuid];
                     });
-                    jeu.connections.forEach((connection) => {
-                        connection.sendUTF(JSON.stringify(ServerResponses.makeJeu(null)));
-                        sendJoueurs(connection);
+                    jeu.connections.forEach(jeuConnection => {
+                        jeuConnection.sendUTF(JSON.stringify(ServerResponses.makeJeu(null)));
+                        sendJoueurs(jeuConnection);
                     });
-                    jeux.splice(jeux.findIndex(j => j == jeu), 1);
+                    jeux.splice(jeux.findIndex(j => j === jeu), 1);
                     jeu.invalid = true;
                 }
                 break;
@@ -224,30 +243,32 @@ export function createActionHandler(connection: connection) {
                     jeu.data.chat = getChatMessage(jeu.data.nomJoueurs[moi], m.message) + jeu.data.chat;
                     sendToAll(jeu);
                 } else if (guid) {
-                    const joueur = joueur_attendant.find(j => j.guid == guid);
+                    const joueur = joueurAttendant.find(j => j.guid === guid);
                     if (!joueur) {
-                        return
+                        return;
                     }
-                    chat_attendant = getChatMessage(joueur.nomJoueur, m.message) + chat_attendant;
-                    joueur_attendant.forEach(({connection}) => sendJoueurs(connection));
+                    chatAttendant = getChatMessage(joueur.nomJoueur, m.message) + chatAttendant;
+                    joueurAttendant.forEach(({connection: joueurConnection}) => sendJoueurs(joueurConnection));
                 }
                 break;
         }
     };
 
     function getChatMessage(name: string, message: string) {
-        return new Date().toTimeString().substring(0, 8) + " " + name + ": " + message.substring(0, 100).replace(/\n/g, " ") + "\n";
+        return new Date().toTimeString().substring(0, 8) + ' ' + name + ': ' +
+            message.substring(0, 100).replace(/\n/g, ' ') + '\n';
     }
 
     function getNomJoueurs() {
-        return joueur_attendant.map(j => j.nomJoueur);
+        return joueurAttendant.map(j => j.nomJoueur);
     }
 
-    function sendJoueurs(con?: connection) {
+    function sendJoueurs(con?: WebsocketConnection) {
         if (!con) {
-            return
+            return;
         }
-        con.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint(getNomJoueurs(), joueur_attendant.map(j => j.guid), chat_attendant)));
+        con.sendUTF(JSON.stringify(
+            ServerResponses.makeJoueurJoint(getNomJoueurs(), joueurAttendant.map(j => j.guid), chatAttendant)));
     }
 }
 
