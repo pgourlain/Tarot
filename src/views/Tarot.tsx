@@ -106,6 +106,8 @@ export default class Tarot extends Component<{}, ITarotState> {
         if (this.state.jeu === null) {
             if (nextState.jeu != null) {
                 notifyUser('Le jeu a commencé!', 'ding');
+            } else if (this.state.chat_attendant !== nextState.chat_attendant) {
+                notifyUser('Nouveau chat!', 'blop');
             }
         } else {
             if (nextState.jeu != null) {
@@ -179,8 +181,12 @@ function notifyUser(text: string, sound: string) {
     if (pageActive) {
         return;
     }
-    var audio = new Audio('tarot/static/' + sound + '.mp3');
-    audio.play();
+    const audio = new Audio('/tarot/static/' + sound + '.ogg');
+    audio.play()
+        .catch(() => {
+            const fallbackAudio = new Audio('/tarot/static/' + sound + '.mp3');
+            fallbackAudio.play();
+        });
 }
 
 let pageActive = true;
