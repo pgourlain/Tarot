@@ -54,7 +54,7 @@
     "start": "npm run watch-js",
     "watch-js": "watchify -p [ tsify ] -o build-debug/main.js -v -d src/app/main.tsx",
     "build": "npm run build-js",
-    "build-js": "NODE_ENV=production browserify src/app/main.tsx -p [ tsify ] -t [ babelify --presets [ es2015 stage-0 react ] --plugins [ transform-react-inline-elements transform-react-constant-elements ]] -t [envify] | uglifyjs -cm > build/main.js",
+    "build-js": "NODE_ENV=production browserify src/app/main.tsx -p [ tsify ] -t [ babelify ] -t [envify] | uglifyjs -cm > build/main.js",
     "updatepackages": "npm-check-updates -u -a",
     "buildServer": "tsc --project .",
     "startServer": "node lib/server/main.js",
