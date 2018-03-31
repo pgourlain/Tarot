@@ -1,12 +1,11 @@
-import * as React from 'react';
-import {Component} from 'react';
+import React from 'react';
 
 export interface IChatProps {
     chat: string;
     onSubmit: (message: string) => void;
 }
 
-export default class Chat extends Component<IChatProps> {
+export default class Chat extends React.Component<IChatProps> {
     public state = {
         chatmessage: '',
     };

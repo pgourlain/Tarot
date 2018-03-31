@@ -1,5 +1,4 @@
-import * as React from 'react';
-import {Component} from 'react';
+import React from 'react';
 import {Card} from '../enums/Card';
 import {IData} from '../interfaces/IData';
 import {Etats} from '../server/Jeu';
@@ -15,7 +14,7 @@ export interface ITableProps {
     onFiniFaireJeu: () => void;
 }
 
-export default class Table extends Component<ITableProps> {
+export default class Table extends React.Component<ITableProps> {
     public state = {
         couperA: 0,
     };

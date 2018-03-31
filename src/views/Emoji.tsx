@@ -1,12 +1,11 @@
-import * as emojiLib from 'emoji';
-import * as React from 'react';
-import {Component} from 'react';
+import emojiLib from 'emoji';
+import React from 'react';
 
 export interface IEmojiProps {
     emoji?: string;
 }
 
-export default class Emoji extends Component<IEmojiProps> {
+export default class Emoji extends React.Component<IEmojiProps> {
     public render() {
         if (!this.props.emoji) {
             return <span/>;

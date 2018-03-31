@@ -1,13 +1,13 @@
-import * as compression from 'compression';
-import * as connect from 'connect';
+import compression from 'compression';
+import connect from 'connect';
 import {createHash} from 'crypto';
 import {readFile} from 'fs';
 import {createServer, IncomingMessage, ServerResponse} from 'http';
 import {basename} from 'path';
-import * as React from 'react';
+import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
-import * as send from 'send';
-import * as systemdSocket from 'systemd-socket';
+import send from 'send';
+import systemdSocket from 'systemd-socket';
 import {server as WebSocketServer} from 'websocket';
 import {Action} from '../datastructure/actions';
 import {createActionHandler, open, save} from './Orga';

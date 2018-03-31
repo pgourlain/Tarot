@@ -1,12 +1,11 @@
-import * as React from 'react';
-import {Component} from 'react';
+import React from 'react';
 
 export interface INomProps {
     nom: string | string[];
     divider?: string;
 }
 
-export default class Nom extends Component<INomProps> {
+export default class Nom extends React.Component<INomProps> {
     public static defaultProps: INomProps = {
         divider: ', ',
         nom: [],

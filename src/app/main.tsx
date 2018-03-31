@@ -1,7 +1,7 @@
 import 'es6-shim';
 
-import * as React from 'react';
-import * as DocumentTitle from 'react-document-title';
+import React from 'react';
+import DocumentTitle from 'react-document-title';
 import {render} from 'react-dom';
 import Tarot from '../views/Tarot';
 

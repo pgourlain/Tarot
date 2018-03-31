@@ -1,5 +1,4 @@
-import * as React from 'react';
-import {Component} from 'react';
+import React from 'react';
 import {Card as CardEnum} from '../enums/Card';
 import Jeu from '../server/Jeu';
 
@@ -8,7 +7,7 @@ export interface ICardProps {
     onClick?: (card: CardEnum) => void;
 }
 
-export default class Card extends Component<ICardProps> {
+export default class Card extends React.Component<ICardProps> {
     public static defaultProps: ICardProps = {
         card: '--',
     };

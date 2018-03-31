@@ -7,7 +7,10 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "module": "commonjs",
+    "moduleResolution": "node",
     "target": "es5",
     "lib": [
       "es6",

@@ -1,7 +1,6 @@
-import * as React from 'react';
-import {Component} from 'react';
-import * as uuid from 'uuid';
-import * as websocket from 'websocket';
+import React from 'react';
+import uuid from 'uuid';
+import websocket from 'websocket';
 import {Actions} from '../datastructure/actions';
 import {ServerResponse, ServerResponses} from '../datastructure/responses';
 import {IData} from '../interfaces/IData';
@@ -22,7 +21,7 @@ interface ITarotState {
     nomJoueur: string;
 }
 
-export default class Tarot extends Component<{}, ITarotState> {
+export default class Tarot extends React.Component<{}, ITarotState> {
     public state: ITarotState = {
         chat_attendant: '',
         client: null,
