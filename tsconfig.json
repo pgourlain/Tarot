@@ -9,7 +9,7 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "module": "commonjs",
+    "module": "es6",
     "moduleResolution": "node",
     "target": "es5",
     "lib": [

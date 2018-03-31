@@ -16,7 +16,7 @@ const jsFile = {content: '', hash: '', path: ''};
 let cssData = '';
 
 const WEB_SERVER = '/tarot';
-const BUILD_DIR = process.env.NODE_ENV !== 'production' ? 'build-debug' : 'build';
+const BUILD_DIR = 'dist';
 const PORT = 8181;
 const IMG_DIR = __dirname + '/../../img/';
 

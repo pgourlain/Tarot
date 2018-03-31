@@ -4,7 +4,6 @@ node_modules/
 lib/
 *.swp
 *~
-build/
-build-debug/
+dist/
 .idea/*
 !.idea/codeStyles/
