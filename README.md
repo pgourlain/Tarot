@@ -5,7 +5,7 @@ Launcher le server avec:
     npm install --production
     npm run buildStartServer
 
-Ouvre le site sur http://localhost:8181
+Ouvre le site sur http://localhost:8181/tarot
 
 ## Develop
 Once:
@@ -15,4 +15,4 @@ Start watcher to compile js:
 npm run start
 
 npm run buildStartServer
-Open http://localhost:8181 in a browser of your choice.
+Open http://localhost:8181/tarot in a browser of your choice.
