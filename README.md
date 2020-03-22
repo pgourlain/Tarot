@@ -12,7 +12,11 @@ Once:
 npm install
 
 Start watcher to compile js:
-npm run start
 
-npm run buildStartServer
+    npm run start
+
+Build and start the server:
+
+    npm run buildStartServer
+
 Open http://localhost:8181/tarot in a browser of your choice.

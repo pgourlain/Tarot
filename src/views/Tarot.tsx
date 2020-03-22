@@ -1,5 +1,5 @@
 import React from 'react';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import websocket from 'websocket';
 import {Actions} from '../datastructure/actions';
 import {ServerResponse, ServerResponses} from '../datastructure/responses';
@@ -42,7 +42,7 @@ export default class Tarot extends React.Component<{}, ITarotState> {
         if (guidItem !== null) {
             guid = guidItem;
         } else {
-            guid = uuid.v4();
+            guid = uuidv4();
             localStorage.setItem('guid', guid);
         }
 

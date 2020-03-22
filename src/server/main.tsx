@@ -140,10 +140,7 @@ app.use(reactHandler);
 
 const fdOrPort = systemdSocket() || PORT;
 const webserver = createServer(app);
-webserver.listen(fdOrPort, (err: any) => {
-    if (err) {
-        throw err;
-    }
+webserver.listen(fdOrPort, () => {
     console.info('Listening on ' + fdOrPort + '...');
 });
 
