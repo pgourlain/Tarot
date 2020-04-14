@@ -1,9 +1,8 @@
 import React from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import websocket from 'websocket';
 import {Actions} from '../datastructure/actions';
-import {ServerResponse, ServerResponses} from '../datastructure/responses';
-import {IData} from '../interfaces/IData';
+import {ResponseJeu, ServerResponse, ServerResponses} from '../datastructure/responses';
 import {Etats} from '../server/Jeu';
 import Chat from './Chat';
 import Nom from './Nom';
@@ -15,10 +14,11 @@ interface ITarotState {
     chat_attendant: string;
     client: WebSocket | null;
     guid: string;
-    jeu: IData | null;
+    jeu: ResponseJeu | null;
     joueurs: string[] | null;
     moi: number | null;
     nomJoueur: string;
+    jeux: {jeuId: number, active: boolean, joueurs: string[]}[];
 }
 
 export default class Tarot extends React.Component<{}, ITarotState> {
@@ -30,6 +30,7 @@ export default class Tarot extends React.Component<{}, ITarotState> {
         joueurs: null,
         moi: null,
         nomJoueur: '',
+        jeux: [],
     };
 
     public componentWillMount() {
@@ -81,19 +82,13 @@ export default class Tarot extends React.Component<{}, ITarotState> {
                 console.debug(m);
                 switch (m.type) {
                     case ServerResponses.JEU:
-                        this.setState({jeu: m.jeu});
+                        this.setState({jeu: m.jeu, moi: m.moi});
                         break;
                     case ServerResponses.JOUEUR_JOINT: {
-                        const moi = m.guids.findIndex(guid => guid === this.state.guid);
-                        if (moi === -1) {
-                            this.setState({joueurs: null, moi: null, chat_attendant: ''});
-                        } else {
-                            this.setState({joueurs: m.joueurs, moi, chat_attendant: m.chat_attendant});
-                        }
+                        this.setState({joueurs: m.joueurs, jeux: m.jeux, chat_attendant: m.chat_attendant, jeu: null, moi: -1});
                         break;
                     }
                     case ServerResponses.REJOINDU: {
-                        this.setState({moi: m.moi});
                         break;
                     }
                 }
@@ -101,25 +96,24 @@ export default class Tarot extends React.Component<{}, ITarotState> {
         };
     }
 
-    public componentWillUpdate(nextProps: {}, nextState: ITarotState) {
-        if (this.state.jeu === null) {
-            if (nextState.jeu != null) {
-                notifyUser('Le jeu a commencé!', 'ding');
-            } else if (this.state.chat_attendant !== nextState.chat_attendant) {
+    public componentDidUpdate(prevProps: {}, prevState: ITarotState) {
+        if (prevState.jeu === null && this.state.jeu === null) {
+            if (this.state.chat_attendant !== prevState.chat_attendant) {
                 notifyUser('Nouveau chat!', 'blop');
             }
-        } else {
-            if (nextState.jeu != null) {
+        } else if (this.state.jeu !== null && prevState.jeu !== null) {
+            if (prevState.jeu.etat === Etats.ATTENDANT && this.state.jeu.etat !== Etats.ATTENDANT) {
+                notifyUser('Le jeu a commencé!', 'ding');
+            } else {
                 const moi = this.state.moi;
-                if (moi !== null && cestAmoi(nextState.jeu, moi) && !cestAmoi(this.state.jeu, moi)) {
+                if (moi !== null && cestAmoi(this.state.jeu, moi) && !cestAmoi(prevState.jeu, moi)) {
                     notifyUser('C’est à toi!', 'ding');
-                } else if (this.state.jeu.chat !== nextState.jeu.chat) {
+                } else if (this.state.jeu.chat !== prevState.jeu.chat) {
                     notifyUser('Nouveau chat!', 'blop');
                 }
             }
         }
-
-        function cestAmoi(jeu: IData, moi: number) {
+        function cestAmoi(jeu: ResponseJeu, moi: number) {
             return (jeu.etat === Etats.JEU && jeu.tourDe === moi) ||
                 (jeu.etat === Etats.COUPER && jeu.coupDe === moi) ||
                 (jeu.etat === Etats.QUI_PREND && jeu.tourDe === moi) ||
@@ -146,11 +140,17 @@ export default class Tarot extends React.Component<{}, ITarotState> {
                 </form>;
             } else {
                 return <div>
-                    {this.state.joueurs.length} joueurs: <Nom nom={this.state.joueurs}/><br/>
-                    <input type="button" value="Commencer le jeu"
-                           onClick={() => client.send(JSON.stringify(Actions.makeStart()))}/>
+                    {this.state.joueurs.length} {this.state.joueurs.length === 1 ? 'joueur attend' : 'joueurs attendent'}: <Nom nom={this.state.joueurs}/><br/>
                     <input type="button" value="Quitter"
                            onClick={() => client.send(JSON.stringify(Actions.makeQuitter()))}/>
+                    <div><input type="button" value="Nouveau table" onClick={() => client.send(JSON.stringify(Actions.makeCreerJeu()))}/></div>
+                    {this.state.jeux.reverse().map(jeu => <div className={'table ' + (jeu.active ? 'active' : 'joinable')} key={jeu.jeuId}>
+                        <ul>
+                            {jeu.joueurs.map((joueur,i) => <li key={i}>{joueur}</li>)}
+                        </ul>
+                        {(!jeu.active) ? <input type="button" value="Joindre ce jeu"
+                               onClick={() => client.send(JSON.stringify(Actions.makeJoindreJeu(jeu.jeuId)))}/> : ''}
+                    </div>)}
                     <Chat chat={this.state.chat_attendant}
                           onSubmit={message => client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
                 </div>;
@@ -165,12 +165,14 @@ export default class Tarot extends React.Component<{}, ITarotState> {
                    onPrendsPasse={prends => client.send(JSON.stringify(Actions.makePrendsPasse(prends)))}
                    onFiniFaireJeu={() => client.send(JSON.stringify(Actions.makeFiniFaireJeu()))}
             />
+            {this.state.jeu.etat === Etats.ATTENDANT ? <input type="button" value="Commencer le jeu"
+                   onClick={() => client.send(JSON.stringify(Actions.makeStart()))}/> : ''}
             {this.state.jeu.etat === Etats.FINI ? <input type="button" value="Prochain jeu"
                                                          onClick={() => client.send(
                                                              JSON.stringify(Actions.makeProchainJeu()))}/> : ''}
             <Chat chat={this.state.jeu.chat}
                   onSubmit={message => client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
-            <input type="button" value="Fermer le jeu"
+            <input type="button" value={this.state.jeu.etat===Etats.ATTENDANT ? 'Quitter le jeu' : 'Fermer le jeu'}
                    onClick={() => client.send(JSON.stringify(Actions.makeQuitterJeu()))}/>
         </div>;
     }

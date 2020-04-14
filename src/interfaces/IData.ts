@@ -2,8 +2,6 @@ import {Card} from '../enums/Card';
 import {Etats} from '../server/Jeu';
 
 export interface IData {
-    nomJoueurs: string[];
-    joueurs: number;
     premierTourDe: number;
     cartes: Card[];
     cartesJoueurs: Card[][];

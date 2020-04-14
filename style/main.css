@@ -1,3 +1,13 @@
+.table {
+    border: 1px solid black;
+    width: 200px;
+}
+.table.joinable {
+    background-color: sandybrown;
+}
+.table.active {
+    background-color: lightgray;
+}
 .card {
     display: inline-block;
 }
@@ -9,6 +19,12 @@
     margin-left:-25px;
 }
 
+.smalleststack {
+    margin-left: 55px;
+}
+.smalleststack .card {
+    margin-left: -55px;
+}
 .smallstack {
     margin-left: 40px;
 }

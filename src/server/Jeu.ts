@@ -1,11 +1,10 @@
-import {connection} from 'websocket';
 import {TarotCartes} from '../datastructure/cartes';
 import {Card} from '../enums/Card';
 import {CardColor} from '../enums/CardColor';
 import {IData} from '../interfaces/IData';
 
 export enum Etats {
-    PAS_DE_JEU = 'pasDeJeu',
+    ATTENDANT = 'attendant',
     COUPER = 'Couper',
     DISTRIBUER = 'Distribuer',
     APPELER_ROI = 'AppelerRoi',
@@ -36,10 +35,9 @@ export default class Jeu {
         V: 10,
     };
 
-    public static creeNouveauJeu(nomJoueurs: string[]): Jeu {
+    public static creeNouveauJeu(): Jeu {
         const cartes = [...TarotCartes];
         shuffle(cartes);
-        const premierTourDe = Math.floor(Math.random() * nomJoueurs.length);
         const data: IData = {
             cartes,
             cartesJoueurs: [],
@@ -47,26 +45,22 @@ export default class Jeu {
             chien: [],
             coupDe: null,
             dernierPli: [],
-            etat: Etats.FINI,
+            etat: Etats.ATTENDANT,
             excuseDe: null,
             excusePliFaitPar: null,
             joueurAvecRoi: null,
-            joueurs: nomJoueurs.length,
-            nomJoueurs,
             pli: [],
             pliFait: [],
             pointsNecessaire: null,
-            premierTourDe,
+            premierTourDe: 0,
             preneur: null,
             preneurAGagne: null,
             reponsePrisePasse: 0,
             resultat: null,
             roiAppele: null,
-            tourDe: premierTourDe,
+            tourDe: 0,
         };
-        const jeu = new Jeu(data, []);
-        jeu.prochainJeu();
-        return jeu;
+        return new Jeu(data);
     }
 
     private static ordreCartes(a: Card, b: Card) {
@@ -248,11 +242,15 @@ export default class Jeu {
         }
     }
 
-    public connections: connection[] = [];
+    constructor(public data: IData, public guids: string[]=[]) {
+    }
 
-    public invalid = false;
-
-    constructor(public data: IData, public guids: string[]) {
+    public commenceJeu() {
+        const premierTourDe = Math.floor(Math.random() * this.guids.length);
+        this.data.tourDe = premierTourDe;
+        this.data.premierTourDe = premierTourDe;
+        this.data.etat = Etats.FINI;
+        this.prochainJeu();
     }
 
     public prochainJeu() {
@@ -260,15 +258,15 @@ export default class Jeu {
             return;
         }
         this.data.etat = Etats.COUPER;
-        this.data.premierTourDe = (this.data.premierTourDe + 1) % this.data.joueurs;
+        this.data.premierTourDe = (this.data.premierTourDe + 1) % this.guids.length;
         this.data.tourDe = this.data.premierTourDe;
-        this.data.coupDe = (this.data.tourDe + this.data.joueurs - 2) % this.data.joueurs;
+        this.data.coupDe = (this.data.tourDe + this.guids.length - 2) % this.guids.length;
         this.data.reponsePrisePasse = 0;
 
         this.data.cartes = this.data.cartes.concat(this.data.chien, ...this.data.cartesJoueurs, ...this.data.pliFait);
         this.data.chien = [];
 
-        for (let i = 0; i < this.data.joueurs; i++) {
+        for (let i = 0; i < this.guids.length; i++) {
             this.data.cartesJoueurs[i] = [];
             this.data.pliFait[i] = [];
         }
@@ -301,7 +299,7 @@ export default class Jeu {
             this.data.preneur = qui;
         }
         this.data.reponsePrisePasse += 1;
-        if (this.data.reponsePrisePasse === this.data.joueurs) {
+        if (this.data.reponsePrisePasse === this.guids.length) {
             if (this.data.preneur == null) {
                 this.data.etat = Etats.FINI;
                 this.prochainJeu();
@@ -309,14 +307,14 @@ export default class Jeu {
                 return;
             } else {
                 this.data.cartesJoueurs.forEach(cartes => cartes.sort(Jeu.ordreCartes));
-                if (this.data.joueurs === 5) {
+                if (this.guids.length === 5) {
                     this.data.etat = Etats.APPELER_ROI;
                 } else {
                     this.montreChien(callback);
                 }
             }
         }
-        this.data.tourDe = (this.data.tourDe + 1) % this.data.joueurs;
+        this.data.tourDe = (this.data.tourDe + 1) % this.guids.length;
         callback();
     }
 
@@ -378,7 +376,7 @@ export default class Jeu {
     public finiFaireJeu(qui: number) {
         if (this.data.etat !== Etats.FAIRE_JEU ||
             qui !== this.data.preneur ||
-            this.data.pli.length !== Jeu.nombrePourChien(this.data.joueurs)) {
+            this.data.pli.length !== Jeu.nombrePourChien(this.guids.length)) {
             // TODO error
             return;
         }
@@ -410,18 +408,18 @@ export default class Jeu {
 
         this.data.cartesJoueurs[qui].splice(carteIndex, 1);
         this.data.pli.push(carte);
-        this.data.tourDe = (this.data.tourDe + 1) % this.data.joueurs;
+        this.data.tourDe = (this.data.tourDe + 1) % this.guids.length;
 
-        if (this.data.pli.length === this.data.joueurs) {
+        if (this.data.pli.length === this.guids.length) {
             this.data.etat = Etats.MONTRE_CARTES;
             setTimeout(() => {
                 this.data.dernierPli = this.data.pli.slice();
                 this.data.etat = Etats.JEU;
 
-                const pourQui = (this.data.tourDe + Jeu.quiGagnePli(this.data.pli)) % this.data.joueurs;
+                const pourQui = (this.data.tourDe + Jeu.quiGagnePli(this.data.pli)) % this.guids.length;
                 const excuseIndex = this.data.pli.findIndex(c => c === 'J');
                 if (excuseIndex !== -1) {
-                    const excuseDe = (this.data.tourDe + excuseIndex) % this.data.joueurs;
+                    const excuseDe = (this.data.tourDe + excuseIndex) % this.guids.length;
                     const pourPreneur = pourQui === this.data.preneur || pourQui === this.data.joueurAvecRoi;
                     const exceuseDePreneur = excuseDe === this.data.preneur || excuseDe === this.data.joueurAvecRoi;
                     if (pourPreneur !== exceuseDePreneur) {
@@ -500,7 +498,7 @@ export default class Jeu {
 
             stepCallback();
 
-            const cartesManquantChien = Jeu.nombrePourChien(this.data.joueurs) - this.data.chien.length;
+            const cartesManquantChien = Jeu.nombrePourChien(this.guids.length) - this.data.chien.length;
             if (this.data.cartes.length - 3 - cartesManquantChien === 0) {// pas les trois dernières cartes
                 this.data.chien = this.data.chien.concat(this.data.cartes.slice(0, cartesManquantChien));
                 this.data.cartes = this.data.cartes.slice(cartesManquantChien);
@@ -510,7 +508,7 @@ export default class Jeu {
                 this.data.cartes = this.data.cartes.slice(1);
                 stepCallback();
             }
-            setTimeout(() => dos((prochain + 1) % this.data.joueurs), 100);
+            setTimeout(() => dos((prochain + 1) % this.guids.length), 100);
         };
         dos(this.data.tourDe);
     }

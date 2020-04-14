@@ -1,12 +1,12 @@
 import React from 'react';
+import {ResponseJeu} from '../datastructure/responses';
 import {Card} from '../enums/Card';
-import {IData} from '../interfaces/IData';
 import {Etats} from '../server/Jeu';
 import CardStack from './CardStack';
 import Nom from './Nom';
 
 export interface ITableProps {
-    jeu: IData;
+    jeu: ResponseJeu;
     moi: number;
     onCouper: (count: number) => void;
     onPlayCard: (card: Card) => void;
@@ -87,6 +87,7 @@ export default class Table extends React.Component<ITableProps> {
                     <input type="submit" value="Couper"/>
                 </form>
                 : ''}
+            <CardStack className="smalleststack" cartes={jeu.cartes}/>
             {jeu.etat === Etats.QUI_PREND && jeu.tourDe === this.props.moi ?
                 <div>
                     <input type="button" value="Je prends" onClick={() => this.props.onPrendsPasse(true)}/>
@@ -103,7 +104,7 @@ export default class Table extends React.Component<ITableProps> {
                 <CardStack className="stack" cartes={jeu.pli} onClick={card => this.props.onPlayCard(card)}/>
                 {jeu.etat !== Etats.FAIRE_JEU ?
                     <Nom nom={jeu.pli.map(
-                        (p, i) => jeu.nomJoueurs[(jeu.tourDe + jeu.joueurs - (jeu.pli.length) + i) % jeu.joueurs])}/>
+                        (p, i) => jeu.nomJoueurs[(jeu.tourDe + jeu.nomJoueurs.length - (jeu.pli.length) + i) % jeu.nomJoueurs.length])}/>
                     : ''}
             </div>
             <br/>
