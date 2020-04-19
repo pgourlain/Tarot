@@ -1,4 +1,4 @@
-import {Card} from '../enums/Card';
+import {Card} from './enums/Card';
 
 const cartes: Card[] = [];
 

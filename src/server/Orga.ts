@@ -3,10 +3,10 @@ import {connection as WebsocketConnection} from 'websocket';
 import {Action, Actions} from '../datastructure/actions';
 import {ServerResponses} from '../datastructure/responses';
 import {IData} from '../interfaces/IData';
-import Jeu, {Etats} from './Jeu';
+import Jeu, {Etats} from '../tarot/Jeu';
 
 interface ISavedGame {
-    jeux: Array<{ jeuData: IData|null, guids: string[] }>;
+    jeux: { jeuData: IData|null, guids: string[] }[];
     known_guids: { [guid: string]: { jeuId: number, nom: string } };
     chat_attendant: string;
 }
@@ -151,52 +151,19 @@ export function createActionHandler(connection: WebsocketConnection) {
                 envoieTousAttendant();
                 sendToAll(jeu);
                 break;
-            case Actions.COUPE:
+            case Actions.ACTION: {
                 if (!jeu) {
                     console.warn('Action non permis, jeu pas commencé');
                     return;
                 }
-                jeu.coupe(m.nombre);
-                sendToAll(jeu);
-                jeu.distribue(() => {
+                jeu.action(m.data, numeroJoueur(), () => {
                     if (!jeu) {
                         return;
                     }
                     sendToAll(jeu);
                 });
                 break;
-            case Actions.PRENDS_PASSE:
-                if (!jeu || !guid) {
-                    console.warn('Action non permis, jeu pas commencé');
-                    return;
-                }
-                jeu.jePrendsPasse(numeroJoueur(), m.prends, () => {
-                    if (!jeu) {
-                        return;
-                    }
-                    sendToAll(jeu);
-                });
-                break;
-            case Actions.CARTE_CLICK:
-                if (!jeu) {
-                    console.warn('Action non permis, jeu pas commencé');
-                    return;
-                }
-                jeu.carteClick(numeroJoueur(), m.carte, () => {
-                    if (!jeu) {
-                        return;
-                    }
-                    sendToAll(jeu);
-                });
-                break;
-            case Actions.FINI_FAIRE_JEU:
-                if (!jeu) {
-                    console.warn('Action non permis, jeu pas commencé');
-                    return;
-                }
-                jeu.finiFaireJeu(numeroJoueur());
-                sendToAll(jeu);
-                break;
+            }
             case Actions.QUITTER_JEU: {
                 const myGuid = guid;
                 if (jeu && myGuid) {
@@ -245,7 +212,7 @@ export function createActionHandler(connection: WebsocketConnection) {
 
     function numeroJoueur() {
         if (!jeu || !jeu.data) return -1;
-        return jeu.guids.findIndex((g) => g===guid)
+        return jeu.guids.findIndex(g => g===guid)
     }
 }
 

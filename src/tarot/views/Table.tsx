@@ -1,17 +1,14 @@
 import React from 'react';
-import {ResponseJeu} from '../datastructure/responses';
-import {Card} from '../enums/Card';
-import {Etats} from '../server/Jeu';
+import {ResponseJeu} from '../../datastructure/responses';
+import {TarotActions} from '../actions';
+import {Etats} from '../Jeu';
 import CardStack from './CardStack';
-import Nom from './Nom';
+import Nom from '../../views/Nom';
 
 export interface ITableProps {
     jeu: ResponseJeu;
     moi: number;
-    onCouper: (count: number) => void;
-    onPlayCard: (card: Card) => void;
-    onPrendsPasse: (prendsPasse: boolean) => void;
-    onFiniFaireJeu: () => void;
+    onAction: (data: any) => void;
 }
 
 export default class Table extends React.Component<ITableProps> {
@@ -80,7 +77,7 @@ export default class Table extends React.Component<ITableProps> {
             {jeu.coupDe === this.props.moi ?
                 <form onSubmit={e => {
                     e.preventDefault();
-                    this.props.onCouper(this.state.couperA);
+                    this.props.onAction(TarotActions.makeCoupe(this.state.couperA));
                 }}>
                     <input type="text" value={this.state.couperA} onChange={e => this.setState(
                         {couperA: Math.min(jeu.cartes.length, Math.max(0, Number(e.target.value)))})}/>
@@ -90,18 +87,18 @@ export default class Table extends React.Component<ITableProps> {
             <CardStack className="smalleststack" cartes={jeu.cartes}/>
             {jeu.etat === Etats.QUI_PREND && jeu.tourDe === this.props.moi ?
                 <div>
-                    <input type="button" value="Je prends" onClick={() => this.props.onPrendsPasse(true)}/>
-                    <input type="button" value="Je passe" onClick={() => this.props.onPrendsPasse(false)}/>
+                    <input type="button" value="Je prends" onClick={() => this.props.onAction(TarotActions.makePrendsPasse(true))}/>
+                    <input type="button" value="Je passe" onClick={() => this.props.onAction(TarotActions.makePrendsPasse(false))}/>
                 </div>
                 : ''}
             {jeu.etat === Etats.FAIRE_JEU && jeu.preneur === this.props.moi ?
-                <input type="button" value="Fini faire mon jeu" onClick={() => this.props.onFiniFaireJeu()}/>
+                <input type="button" value="Fini faire mon jeu" onClick={() => this.props.onAction(TarotActions.makeFiniFaireJeu())}/>
                 : ''}
             <br/>
             <br/>
             <div>
                 L’écart:
-                <CardStack className="stack" cartes={jeu.pli} onClick={card => this.props.onPlayCard(card)}/>
+                <CardStack className="stack" cartes={jeu.pli} onClick={card => this.props.onAction(TarotActions.makeCarteClick(card))}/>
                 {jeu.etat !== Etats.FAIRE_JEU ?
                     <Nom nom={jeu.pli.map(
                         (p, i) => jeu.nomJoueurs[(jeu.tourDe + jeu.nomJoueurs.length - (jeu.pli.length) + i) % jeu.nomJoueurs.length])}/>
@@ -109,18 +106,18 @@ export default class Table extends React.Component<ITableProps> {
             </div>
             <br/>
             {jeu.etat === Etats.APPELER_ROI ?
-                <CardStack cartes={['PR', 'KR', 'TR', 'CR']} onClick={card => this.props.onPlayCard(card)}/>
+                <CardStack cartes={['PR', 'KR', 'TR', 'CR']} onClick={card => this.props.onAction(TarotActions.makeCarteClick(card))}/>
                 : ''}
             {jeu.chien.length !== 0 ?
                 <div>
                     Le chien:
-                    <CardStack cartes={jeu.chien} onClick={card => this.props.onPlayCard(card)}/>
+                    <CardStack cartes={jeu.chien} onClick={card => this.props.onAction(TarotActions.makeCarteClick(card))}/>
                 </div>
                 : ''}
             <div>
                 Mes cartes:
                 <CardStack className="stack" cartes={jeu.cartesJoueurs[this.props.moi]}
-                           onClick={card => this.props.onPlayCard(card)}/>
+                           onClick={card => this.props.onAction(TarotActions.makeCarteClick(card))}/>
             </div>
             {cartes}
             <br/>

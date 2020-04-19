@@ -1,5 +1,5 @@
-import {Card} from '../enums/Card';
-import {Etats} from '../server/Jeu';
+import {Card} from '../tarot/enums/Card';
+import {Etats} from '../tarot/Jeu';
 
 export interface IData {
     premierTourDe: number;

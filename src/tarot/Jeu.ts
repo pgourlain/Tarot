@@ -1,7 +1,8 @@
-import {TarotCartes} from '../datastructure/cartes';
-import {Card} from '../enums/Card';
-import {CardColor} from '../enums/CardColor';
+import {TarotCartes} from './cartes';
+import {Card} from './enums/Card';
+import {CardColor} from './enums/CardColor';
 import {IData} from '../interfaces/IData';
+import {TarotActions} from './actions';
 
 export enum Etats {
     ATTENDANT = 'attendant',
@@ -17,7 +18,7 @@ export enum Etats {
 }
 
 export default class Jeu {
-    public static couleurs: { [couleur: string]: number } = {P: 0, K: 1, T: 2, C: 3, A: 4};
+    private static couleurs: { [couleur: string]: number } = {P: 0, K: 1, T: 2, C: 3, A: 4};
     public static cartesType: { [type: string]: number } = {
         1: 0,
         2: 1,
@@ -283,14 +284,18 @@ export default class Jeu {
         this.data.preneurAGagne = null;
     }
 
-    public coupe(nombre: number) {
+    private coupe(qui: number, nombre: number) {
+        if (this.data.etat !== Etats.COUPER || qui !== this.data.tourDe) {
+            // TODO error
+            return;
+        }
         this.data.cartes = this.data.cartes.slice(nombre).concat(this.data.cartes.slice(0, nombre));
         this.data.coupDe = null;
 
         this.data.etat = Etats.DISTRIBUER;
     }
 
-    public jePrendsPasse(qui: number, prends: boolean, callback: () => void) {
+    private jePrendsPasse(qui: number, prends: boolean, callback: () => void) {
         if (this.data.etat !== Etats.QUI_PREND || qui !== this.data.tourDe) {
             // TODO error
             return;
@@ -318,7 +323,7 @@ export default class Jeu {
         callback();
     }
 
-    public montreChien(callback: () => void) {
+    private montreChien(callback: () => void) {
         this.data.etat = Etats.CHIEN_MONTREE;
         setTimeout(() => {
             if (this.data.preneur === null) {
@@ -334,7 +339,7 @@ export default class Jeu {
         }, 7000);
     }
 
-    public carteClick(qui: number, carte: Card, callback: () => void) {
+    private carteClick(qui: number, carte: Card, callback: () => void) {
         if (this.data.etat === Etats.FAIRE_JEU) {
             this.faireJeu(qui, carte);
         } else if (this.data.etat === Etats.JEU) {
@@ -350,7 +355,7 @@ export default class Jeu {
         callback();
     }
 
-    public faireJeu(qui: number, carte: Card) {
+    private faireJeu(qui: number, carte: Card) {
         if (this.data.etat !== Etats.FAIRE_JEU || qui !== this.data.preneur) {
             // TODO error
             return;
@@ -373,7 +378,7 @@ export default class Jeu {
         }
     }
 
-    public finiFaireJeu(qui: number) {
+    private finiFaireJeu(qui: number) {
         if (this.data.etat !== Etats.FAIRE_JEU ||
             qui !== this.data.preneur ||
             this.data.pli.length !== Jeu.nombrePourChien(this.guids.length)) {
@@ -386,7 +391,7 @@ export default class Jeu {
         this.data.etat = Etats.JEU;
     }
 
-    public joueCarte(qui: number, carte: Card, callback: () => void) {
+    private joueCarte(qui: number, carte: Card, callback: () => void) {
         if (this.data.etat !== Etats.JEU || qui !== this.data.tourDe) {
             // TODO error
             return;
@@ -451,7 +456,7 @@ export default class Jeu {
         }
     }
 
-    public essayDonnerCartePourExcuse() {
+    private essayDonnerCartePourExcuse() {
         if (this.data.excuseDe === null || this.data.excusePliFaitPar === null) {
             return;
         }
@@ -486,7 +491,7 @@ export default class Jeu {
         }
     }
 
-    public distribue(stepCallback: () => void) {
+    private distribue(stepCallback: () => void) {
         const dos = (prochain: number) => {
             if (this.data.cartes.length <= 0) {
                 this.data.etat = Etats.QUI_PREND;
@@ -539,6 +544,26 @@ export default class Jeu {
         }
         const cartesCachés = this.data.cartes.map(() => '--');
         return {...this.data, pli, cartes: cartesCachés, chien, cartesJoueurs, pliFait};
+    }
+
+    public action(m: any, qui: number, sendToAll: () => void) {
+        switch (m.type) {
+            case TarotActions.COUPE:
+                this.coupe(qui, m.nombre);
+                sendToAll();
+                this.distribue(sendToAll);
+                break;
+            case TarotActions.PRENDS_PASSE:
+                this.jePrendsPasse(qui, m.prends, sendToAll);
+                break;
+            case TarotActions.CARTE_CLICK:
+                this.carteClick(qui, m.carte, sendToAll);
+                break;
+            case TarotActions.FINI_FAIRE_JEU:
+                this.finiFaireJeu(qui);
+                sendToAll();
+                break;
+        }
     }
 }
 

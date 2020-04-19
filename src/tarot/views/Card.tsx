@@ -1,6 +1,6 @@
 import React from 'react';
 import {Card as CardEnum} from '../enums/Card';
-import Jeu from '../server/Jeu';
+import Jeu from '../Jeu';
 
 export interface ICardProps {
     card: CardEnum;

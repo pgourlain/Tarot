@@ -3,10 +3,10 @@ import {v4 as uuidv4} from 'uuid';
 import websocket from 'websocket';
 import {Actions} from '../datastructure/actions';
 import {ResponseJeu, ServerResponse, ServerResponses} from '../datastructure/responses';
-import {Etats} from '../server/Jeu';
+import {Etats} from '../tarot/Jeu';
 import Chat from './Chat';
 import Nom from './Nom';
-import Table from './Table';
+import Table from '../tarot/views/Table';
 
 const w3cwebsocket: typeof WebSocket = (websocket as any).w3cwebsocket;
 
@@ -160,10 +160,7 @@ export default class Tarot extends React.Component<{}, ITarotState> {
         return <div>
             <Table jeu={this.state.jeu}
                    moi={this.state.moi}
-                   onPlayCard={card => client.send(JSON.stringify(Actions.makeCarteClick(card)))}
-                   onCouper={nombre => client.send(JSON.stringify(Actions.makeCoupe(nombre)))}
-                   onPrendsPasse={prends => client.send(JSON.stringify(Actions.makePrendsPasse(prends)))}
-                   onFiniFaireJeu={() => client.send(JSON.stringify(Actions.makeFiniFaireJeu()))}
+                   onAction={data => client.send(JSON.stringify((Actions.makeAction(data))))}
             />
             {this.state.jeu.etat === Etats.ATTENDANT ? <input type="button" value="Commencer le jeu"
                    onClick={() => client.send(JSON.stringify(Actions.makeStart()))}/> : ''}
