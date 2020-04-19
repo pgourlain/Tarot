@@ -74,7 +74,7 @@ export default class Table extends React.Component<ITableProps> {
             <br/>
             <br/>
             {status}
-            {jeu.coupDe === this.props.moi ?
+            {(jeu.etat === Etats.COUPER && jeu.coupDe === this.props.moi) ?
                 <form onSubmit={e => {
                     e.preventDefault();
                     this.props.onAction(TarotActions.makeCoupe(this.state.couperA));

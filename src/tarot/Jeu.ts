@@ -131,11 +131,14 @@ export default class Jeu {
             }
         }
 
-        if (couleurMettre !== 'A' && hautAtout !== null) {
+        if (couleurMettre !== 'A') {
             for (const c of cartes) {
                 if (c.substr(0, 1) === 'A') {
                     if (carteCouleur !== 'A') {
                         return false;
+                    }
+                    if (!hautAtout) {
+                        return true;
                     }
                     const catout = parseInt(c.substr(1), 10);
                     const carteAtout = parseInt(carte.substr(1), 10);
