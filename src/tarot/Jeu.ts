@@ -428,15 +428,12 @@ export default class Jeu {
                 const excuseIndex = this.data.pli.findIndex(c => c === 'J');
                 if (excuseIndex !== -1) {
                     const excuseDe = (this.data.tourDe + excuseIndex) % this.guids.length;
-                    const pourPreneur = pourQui === this.data.preneur || pourQui === this.data.joueurAvecRoi;
-                    const exceuseDePreneur = excuseDe === this.data.preneur || excuseDe === this.data.joueurAvecRoi;
-                    if (pourPreneur !== exceuseDePreneur) {
+                    if (this.isTeamPreneur(excuseDe) !== this.isTeamPreneur(pourQui)) {
                         this.data.pliFait[excuseDe] = this.data.pliFait[excuseDe].concat(
                             this.data.pli.splice(excuseIndex, 1));
                         this.data.excuseDe = excuseDe;
                         this.data.excusePliFaitPar = pourQui;
                     }
-                    this.essayDonnerCartePourExcuse();
                 }
 
                 this.data.pliFait[pourQui] = this.data.pliFait[pourQui].concat(this.data.pli);
@@ -459,29 +456,26 @@ export default class Jeu {
         }
     }
 
+    private isTeamPreneur(i: number|null) {
+        if (this.guids.length === 5) {
+            return (i === this.data.preneur || i === this.data.joueurAvecRoi);
+        } else {
+            return i === this.data.preneur;
+        }
+    }
+
     private essayDonnerCartePourExcuse() {
         if (this.data.excuseDe === null || this.data.excusePliFaitPar === null) {
             return;
         }
-        if (this.data.roiAppele !== null) {
-            if (this.data.joueurAvecRoi == null) {
-                return;
-            }
-            const pourPreneur = this.data.excusePliFaitPar === this.data.preneur || this.data.excusePliFaitPar ===
-                this.data.joueurAvecRoi;
-            const exceuseDePreneur = this.data.excuseDe === this.data.preneur || this.data.excuseDe ===
-                this.data.joueurAvecRoi;
-            if (pourPreneur === exceuseDePreneur) {
-                this.data.excuseDe = null;
-                this.data.excusePliFaitPar = null;
-                return;
-            }
-        }
         const de = this.data.pliFait.filter(
-            (cartes, i) => (this.data.excuseDe === this.data.preneur &&
-                (i === this.data.preneur || i === this.data.joueurAvecRoi)) ||
-                (this.data.excuseDe !== this.data.preneur && i !== this.data.preneur),
-        );
+            (cartes, i) => {
+                if (this.isTeamPreneur(this.data.excuseDe)) {
+                    return this.isTeamPreneur(i);
+                } else {
+                    return !this.isTeamPreneur(i);
+                }
+            });
         for (const cartes of de) {
             const index = cartes.findIndex(c => Jeu.pointsCarte(c) === .5);
             if (index !== -1) {

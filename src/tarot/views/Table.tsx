@@ -56,7 +56,7 @@ export default class Table extends React.Component<ITableProps> {
             if (jeu.tourDe === this.props.moi) {
                 status = <b>Est-ce que tu veux prendre?</b>;
             } else {
-                status = <span>C’est le tour de joueur <Nom nom={jeu.nomJoueurs[jeu.tourDe]}/> à décider. </span>;
+                status = <span>C’est au joueur <Nom nom={jeu.nomJoueurs[jeu.tourDe]}/> à décider. </span>;
             }
         } else if (jeu.etat === Etats.APPELER_ROI) {
             if (jeu.preneur === this.props.moi) {
