@@ -17,7 +17,10 @@ export default class Chat extends React.Component<IChatProps> {
             this.setState({chatmessage: ''});
         }}>
             <input type="text" value={this.state.chatmessage}
-                   onChange={e => this.setState({chatmessage: e.target.value})}/><input type="submit" value="Envoi"/>
+                   onChange={e => this.setState({chatmessage: e.target.value})} placeholder="Entrez votre texte ici"/>
+                    <button className="buttonCommand" type="submit">
+                    <i className="fas fa-paper-plane fa-2x"></i><span>Envoi</span>
+                    </button>
             <textarea value={this.props.chat} readOnly={true}/>
         </form>;
     }

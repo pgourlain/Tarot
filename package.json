@@ -2,7 +2,6 @@
   "name": "Tarot",
   "description": "Jouer Tarot sur ligne",
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.13.0",
     "compression": "~1.7.4",
     "connect": "~3.7.0",
     "emoji": "~0.3.2",

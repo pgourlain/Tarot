@@ -1,3 +1,4 @@
+import { connection } from 'websocket';
 
 export type Action =
     { type: typeof Actions.CREER_JEU } |
@@ -10,7 +11,8 @@ export type Action =
     { type: typeof Actions.ACTION, data: any } |
     { type: typeof Actions.QUITTER_JEU } |
     { type: typeof Actions.PROCHAIN_JEU } |
-    { type: typeof Actions.SEND_MESSAGE, message: string };
+    { type: typeof Actions.SEND_MESSAGE, message: string } |
+    { type: typeof Actions.CLIENT_DISCONNECTED, cnx: connection }
 
 export class Actions {
     public static readonly CREER_JEU = 'creerJeu';
@@ -24,6 +26,7 @@ export class Actions {
     public static readonly QUITTER_JEU = 'quitterJeu';
     public static readonly PROCHAIN_JEU = 'prochainJeu';
     public static readonly SEND_MESSAGE = 'sendMessage';
+    public static readonly CLIENT_DISCONNECTED= 'clientDisconnected';
 
     public static readonly makeCreerJeu = () => ({type: Actions.CREER_JEU});
     public static readonly makeSupprimerJeu = (uid : string) => ({type: Actions.SUPPRIMER_JEU, uid});

@@ -55,6 +55,7 @@ export default class Tarot extends React.Component<{}, ITarotState> {
     }
 
     public connectWebsocket() {
+        console.log('connectWebsocket');
         const client = new w3cwebsocket((location.protocol === 'http:' ? 'ws://' : 'wss://') + location.hostname +
             (location.port ? ':' + location.port : '') + '/tarot/ws/', 'tarot-protocol');
 
@@ -136,13 +137,17 @@ export default class Tarot extends React.Component<{}, ITarotState> {
                         this.setState({nomJoueur: e.target.value});
                         localStorage.setItem('nomJoueur', e.target.value);
                     }}/>
-                    <input type="submit" value="Joindre"/>
+                    <button type="submit" className="buttonCommand">
+                    <i className="fas fa-sign-in-alt fa-2x"></i><span>Joindre</span>
+                        </button>
                 </form>;
             } else {
                 return <div>
                     {this.state.joueurs.length} {this.state.joueurs.length === 1 ? 'joueur attend' : 'joueurs attendent'}: <Nom nom={this.state.joueurs}/><br/>
-                    <input type="button" value="Quitter"
-                           onClick={() => client.send(JSON.stringify(Actions.makeQuitter()))}/>
+                    <button className="buttonCommand"
+                           onClick={() => client.send(JSON.stringify(Actions.makeQuitter()))}>
+                               <i className="fas fa-sign-out-alt fa-2x"></i><span>Quitter</span>
+                               </button>
                     <TableList client={this.state.client} jeux={this.state.jeux} />
                     <Chat chat={this.state.chat_attendant}
                           onSubmit={message => client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
@@ -155,15 +160,21 @@ export default class Tarot extends React.Component<{}, ITarotState> {
                    moi={this.state.moi}
                    onAction={data => client.send(JSON.stringify((Actions.makeAction(data))))}
             />
-            {this.state.jeu.etat === Etats.ATTENDANT ? <input type="button" value="Commencer le jeu"
-                   onClick={() => client.send(JSON.stringify(Actions.makeStart()))}/> : ''}
-            {this.state.jeu.etat === Etats.FINI ? <input type="button" value="Prochain jeu"
+            {this.state.jeu.etat === Etats.ATTENDANT ? <button className="buttonCommand"
+                   onClick={() => client.send(JSON.stringify(Actions.makeStart()))}>
+                       <i className="fas fa-play fa-2x"></i><span>Commencer</span>
+                       </button> : ''}
+            {this.state.jeu.etat === Etats.FINI ? <button className="buttonCommand"
                                                          onClick={() => client.send(
-                                                             JSON.stringify(Actions.makeProchainJeu()))}/> : ''}
+                                                             JSON.stringify(Actions.makeProchainJeu()))}>
+                                                                 <i className="fas fa-forward fa-2x"></i><span>Nouvelle partie</span>
+                                                                 </button> : ''}
             <Chat chat={this.state.jeu.chat}
                   onSubmit={message => client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
-            <input type="button" value={this.state.jeu.etat===Etats.ATTENDANT ? 'Quitter le jeu' : 'Fermer le jeu'}
-                   onClick={() => client.send(JSON.stringify(Actions.makeQuitterJeu()))}/>
+            <button className="buttonCommand"
+                onClick={() => client.send(JSON.stringify(Actions.makeQuitterJeu()))}>
+                <i className="fas fa-sign-out-alt fa-2x"></i><span>{this.state.jeu.etat===Etats.ATTENDANT ? 'Quitter le jeu' : 'Fermer le jeu'}</span>
+            </button>
         </div>;
     }
 }

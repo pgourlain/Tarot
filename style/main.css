@@ -3,8 +3,6 @@
     width: 200px;
     min-height: 100px;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
     padding: 3px;
     margin-right: 1em;
 }
@@ -14,6 +12,38 @@
 .table.active {
     background-color: lightgray;
 }
+
+.buttonCommand {
+    height: 3em;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.buttonCommand span {
+    margin-left: 1em;
+}
+.buttonCommand.w100 {
+    width: 100px;;
+}
+
+.tableList {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 1em;
+}
+
+.newTable {
+    display: flex;
+    min-height: 100px;
+    width: 100px;
+    justify-content: center;
+    align-items: center;
+}
+
 .card {
     display: inline-block;
 }
@@ -47,8 +77,9 @@
 .chat {
     display: flex;
     flex-direction: column;
-    width: 320px;
-    height: 400px;
+    width: 250px;
+    height: 300px;
+    margin-top: 1em;
 }
 .chat textarea {
     flex-grow: 1;
@@ -73,13 +104,12 @@
 
 .mainboardCenter {
     width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
 }
 
 .mainboardCenterUp {
-    height: 100%;
     display: flex;
     justify-content: center;
 }
@@ -91,14 +121,12 @@
 }
 
 .mainboardCenterDown {
-    height: 100%;
     display: flex;
     justify-content: flex-start;
     align-items: flex-end;  
 }
 
 .mainboardCenterCenter {
-    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -106,6 +134,8 @@
     border:  solid black 1px;
     border-radius: 10px;
     margin: 5px;
+    padding-bottom: 1em;
+    padding-top: 1em;
 }
 
 .mainboardRight {
@@ -118,22 +148,6 @@
 
 .lastpli {
     height: auto;
-}
-
-.tableList {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-top: 1em;
-}
-
-.newTable {
-    display: flex;
-    min-height: 100px;
-    width: 100px;
-    justify-content: center;
-    align-items: center;
 }
 
 .newTable input {
@@ -149,6 +163,9 @@
     font-family: "Font Awesome 5 Free";
 }
 
+textarea {
+    resize: none;
+}
 
 @media (min-width: 1300px) {
     .mainboard {

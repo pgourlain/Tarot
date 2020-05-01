@@ -1,5 +1,5 @@
 import {readFile, writeFile} from 'fs';
-import {connection as WebsocketConnection} from 'websocket';
+import {connection as WebsocketConnection, connection} from 'websocket';
 import {Action, Actions} from '../datastructure/actions';
 import {ServerResponses} from '../datastructure/responses';
 import {IData} from '../interfaces/IData';
@@ -12,9 +12,14 @@ interface ISavedGame {
     chat_attendant: string;
 }
 
+interface IKnownGuid {
+    jeu: Jeu | null, nom: string;
+    connection: WebsocketConnection | null;
+}
+
 const jeux: (Jeu|null)[] = [];
 
-let knownGuids: { [guid: string]: { jeu: Jeu | null, nom: string, connection: WebsocketConnection | null } } = {};
+let knownGuids: { [guid: string]: IKnownGuid } = {};
 
 let chatAttendant = '';
 
@@ -68,14 +73,14 @@ export function open(file: string, callback?: () => void) {
     });
 }
 
-export function createActionHandler(connection: WebsocketConnection) {
+export function createActionHandler(cnx: WebsocketConnection) {
     let jeu: Jeu | null = null;
     let guid: string | null = null;
     return (m: Action) => {
         switch (m.type) {
             case Actions.JOINDRE: {
                 const newGuid = m.guid;
-                knownGuids[newGuid] = {connection, nom: m.nomJoueur, jeu: null};
+                knownGuids[newGuid] = {connection:cnx, nom: m.nomJoueur, jeu: null};
                 guid = newGuid;
                 envoieTousAttendant();
                 break;
@@ -83,16 +88,16 @@ export function createActionHandler(connection: WebsocketConnection) {
             case Actions.REJOINDRE: {
                 if (m.guid in knownGuids) {
                     guid = m.guid;
-                    knownGuids[guid].connection = connection;
+                    knownGuids[guid].connection = cnx;
                     jeu = knownGuids[guid].jeu;
                     if (jeu) {
-                        connection.sendUTF(JSON.stringify(ServerResponses.makeRejoindu()));
+                        cnx.sendUTF(JSON.stringify(ServerResponses.makeRejoindu()));
                         sendToAll(jeu);
                     } else {
                         envoieTousAttendant();
                     }
                 } else {
-                    sendPasDeJoueurs(connection);
+                    sendPasDeJoueurs(cnx);
                     return;
                 }
                 break;
@@ -126,11 +131,7 @@ export function createActionHandler(connection: WebsocketConnection) {
                 envoieTousAttendant();
                 break;
             case Actions.QUITTER: {
-                if (guid && guid in knownGuids) {
-                    delete knownGuids[guid];
-                    envoieTousAttendant();
-                    sendPasDeJoueurs(connection);
-                }
+                quitter(guid, cnx);
                 break;
             }
             case Actions.JOINDRE_JEU: {
@@ -149,7 +150,7 @@ export function createActionHandler(connection: WebsocketConnection) {
                     return;
                 }
                 const myGuid: string = guid;
-                if (prochainJeu.guids.find(g => knownGuids[g].nom === knownGuids[myGuid].nom) !== undefined) {
+                if (prochainJeu.guids.filter(g => knownGuids[g]).find(g => knownGuids[g].nom === knownGuids[myGuid].nom) !== undefined) {
                     console.warn('player name already exists');
                     // TODO error
                     return;
@@ -227,6 +228,11 @@ export function createActionHandler(connection: WebsocketConnection) {
                     envoieTousAttendant();
                 }
                 break;
+            case Actions.CLIENT_DISCONNECTED:
+                setTimeout(() => {
+                    cleanClosedConnection(cnx);
+                }, 10*1000);
+                break;
         }
     };
 
@@ -239,6 +245,29 @@ export function createActionHandler(connection: WebsocketConnection) {
         if (!jeu || !jeu.data) return -1;
         return jeu.guids.findIndex(g => g===guid)
     }
+}
+
+function quitter(guid : string|null, cnx: connection) {
+    if (guid && guid in knownGuids) {
+        delete knownGuids[guid];
+        envoieTousAttendant();
+        sendPasDeJoueurs(cnx);
+    }
+
+}
+
+function cleanClosedConnection(cnx : connection) {
+    console.log(`start cleaning`);
+    for (const guid in knownGuids) {
+        if (knownGuids.hasOwnProperty(guid)) {
+            const user = knownGuids[guid];
+            if (user.connection && !user.connection.connected) {
+                console.warn(`cleaning for ${guid}`);
+                quitter(guid, cnx);
+            }
+        }
+    }
+    console.log('end cleaning');
 }
 
 function sendPasDeJoueurs(con: WebsocketConnection) {
@@ -255,7 +284,7 @@ function envoieTousAttendant() {
                 uid:j.jeu?.data.uid ? j.jeu?.data.uid : '',
                 jeuId: j.i,
                 active: j.jeu?.data.etat!==Etats.ATTENDANT, 
-                joueurs: (j.jeu ? j.jeu.guids.map(g=>knownGuids[g].nom) : [])
+                joueurs: (j.jeu ? j.jeu.guids.filter(g => knownGuids[g]).map(g=>knownGuids[g].nom) : [])
             };
             return res;
             // return {uid:j.jeu?.data.uid, jeuId: j.i, active: j.jeu?.data.etat!==Etats.ATTENDANT, joueurs: (j.jeu ? j.jeu.guids.map(g=>knownGuids[g].nom) : [])}; 
@@ -266,7 +295,9 @@ function envoieTousAttendant() {
 export function sendToAll(jeu: Jeu) {
     jeu.guids.forEach(guid => {
         const moi = jeu.guids.findIndex(g => g === guid);
-        const data = {...jeu.anonymize(moi), nomJoueurs: jeu.guids.map(g=> knownGuids[g].nom)};
-        knownGuids[guid].connection?.sendUTF(JSON.stringify(ServerResponses.makeJeu(data, moi)));
+        const data = {...jeu.anonymize(moi), nomJoueurs: jeu.guids.filter(g =>knownGuids[g]).map(g=> knownGuids[g].nom)};
+        if (knownGuids[guid]) {
+            knownGuids[guid].connection?.sendUTF(JSON.stringify(ServerResponses.makeJeu(data, moi)));
+        }
     });
 }

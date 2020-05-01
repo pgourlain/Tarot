@@ -38,7 +38,7 @@ export default class Table extends React.Component<ITableProps> {
         } else {
             lastPli = '';
         }
-        let scoreboard = '';
+        const scoreboard = '';
 
         let status;
         if (jeu.etat === Etats.JEU) {
@@ -66,12 +66,21 @@ export default class Table extends React.Component<ITableProps> {
                 status = <span>C’est à <Nom nom={jeu.nomJoueurs[jeu.preneur]}/> de choisir un roi. </span>;
             }
         }
-
+        let listJoueurs;
+        if (jeu.etat === Etats.ATTENDANT)
+        {
+            listJoueurs = <div><span>Joueurs</span><ul>{jeu.nomJoueurs.map((joueur,index) => {
+            return <li key={index}>{joueur}</li>})
+            }</ul></div>
+        } else {
+            listJoueurs = '';
+        }
         const colorToName: { [key: string]: string } = {PR: 'pique', KR: 'carreau', TR: 'trèfle', CR: 'cœur'};
         return <div>
             Tu es le joueur <Nom nom={jeu.nomJoueurs[this.props.moi]}/><br/>
             <div className="mainboard">
                 <div className="mainboardLeft">
+                    {listJoueurs}
                     <div>{jouerwithoutme[0]}</div>
                     {lastPli}
                 </div>

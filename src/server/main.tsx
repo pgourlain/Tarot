@@ -109,6 +109,7 @@ function reactHandler(req: IncomingMessage, res: ServerResponse) {
                 <meta name="theme-color" content="#ffffff"/>
                 <meta name="apple-mobile-web-app-capable" content="yes"/>
                 <link rel="apple-touch-icon" href={WEB_SERVER + '/img/icon.png'}/>
+                <script src="https://kit.fontawesome.com/a66eb248f8.js"></script>
                 <style dangerouslySetInnerHTML={{__html: cssData}}/>
             </head>
             <body>
@@ -200,6 +201,8 @@ wsServer.on('request', request => {
     });
     connection.on('close', (reasonCode, description) => {
         console.debug((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected:', reasonCode, description);
+        // const m:Action = { type:Actions.CLIENT_DISCONNECTED, cnx:connection};
+        // actionHandler(m);
     });
 });
 
