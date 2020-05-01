@@ -98,9 +98,14 @@ export function createActionHandler(connection: WebsocketConnection) {
                 break;
             }
             case Actions.CREER_JEU:
-                const newJeu = Jeu.creeNouveauJeu();
-                jeux.push(newJeu);
-                envoieTousAttendant();
+                if (jeux.length < 20) {
+                    const newJeu = Jeu.creeNouveauJeu();
+                    jeux.push(newJeu);
+                    envoieTousAttendant();
+                } else {
+                    console.warn('game max count has been reached the limit of 20.');
+                    return;
+                }
                 break;
             case Actions.SUPPRIMER_JEU:
                 // remove jeuId
@@ -132,8 +137,8 @@ export function createActionHandler(connection: WebsocketConnection) {
                 if (!guid || !(guid in knownGuids)) {
                     return;
                 }
-                const i = jeux.findIndex(x => x ? x.data.uid===m.uid : false);
-                const prochainJeu = jeux[i];
+                const indexNextJeu = jeux.findIndex(x => x ? x.data.uid===m.uid : false);
+                const prochainJeu = jeux[indexNextJeu];
                 if ((!prochainJeu) || prochainJeu.data.etat !== Etats.ATTENDANT) {
                     console.warn('game does not exist or has already started');
                     return;

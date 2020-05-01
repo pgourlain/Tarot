@@ -7,11 +7,20 @@ import {Etats} from '../tarot/Jeu';
 import Chat from './Chat';
 import Nom from './Nom';
 import Table from '../tarot/views/Table';
-import {ITarotState} from '../interfaces/ITarotState';
 import TableList from '../tarot/views/TableList';
+import { IJeu } from '../interfaces/IJeu';
 
 const w3cwebsocket: typeof WebSocket = (websocket as any).w3cwebsocket;
-
+export interface ITarotState {
+    chat_attendant: string;
+    client: WebSocket | null;
+    guid: string;
+    jeu: ResponseJeu | null;
+    joueurs: string[] | null;
+    moi: number | null;
+    nomJoueur: string;
+    jeux: IJeu[];
+}
 export default class Tarot extends React.Component<{}, ITarotState> {
     public state: ITarotState = {
         chat_attendant: '',
