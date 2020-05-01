@@ -1,8 +1,9 @@
 import {IData} from '../interfaces/IData';
+import { IJeu } from '../interfaces/IJeu';
 
 export type ServerResponse =
     { type: typeof ServerResponses.JEU; jeu: ResponseJeu | null, moi: number } |
-    { type: typeof ServerResponses.JOUEUR_JOINT; joueurs: string[]|null; jeux: {jeuId: number, active: boolean, joueurs: string[]}[]; chat_attendant: string } |
+    { type: typeof ServerResponses.JOUEUR_JOINT; joueurs: string[]|null; jeux: IJeu[]; chat_attendant: string } |
     { type: typeof ServerResponses.REJOINDU; };
 
 export interface ResponseJeu extends IData {
@@ -15,7 +16,7 @@ export class ServerResponses {
 
     public static readonly makeJeu = (jeu: ResponseJeu | null, moi: number) => ({type: ServerResponses.JEU, jeu, moi});
 
-    public static readonly makeJoueurJoint = (joueurs: string[]|null, jeux: {jeuId: number, active: boolean, joueurs: string[]}[], chatAttendant: string) => ({
+    public static readonly makeJoueurJoint = (joueurs: string[]|null, jeux: IJeu[], chatAttendant: string) => ({
         type: ServerResponses.JOUEUR_JOINT,
         chat_attendant: chatAttendant,
         joueurs,

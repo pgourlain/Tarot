@@ -1,11 +1,12 @@
 
 export type Action =
     { type: typeof Actions.CREER_JEU } |
+    { type: typeof Actions.SUPPRIMER_JEU, uid: string } |
     { type: typeof Actions.START } |
     { type: typeof Actions.REJOINDRE, guid: string } |
     { type: typeof Actions.QUITTER } |
     { type: typeof Actions.JOINDRE, guid: string, nomJoueur: string } |
-    { type: typeof Actions.JOINDRE_JEU, jeuId: number } |
+    { type: typeof Actions.JOINDRE_JEU, uid: string } |
     { type: typeof Actions.ACTION, data: any } |
     { type: typeof Actions.QUITTER_JEU } |
     { type: typeof Actions.PROCHAIN_JEU } |
@@ -13,6 +14,7 @@ export type Action =
 
 export class Actions {
     public static readonly CREER_JEU = 'creerJeu';
+    public static readonly SUPPRIMER_JEU = 'supprimerJeu';
     public static readonly START = 'start';
     public static readonly REJOINDRE = 'rejoindre';
     public static readonly QUITTER = 'quitter';
@@ -24,6 +26,7 @@ export class Actions {
     public static readonly SEND_MESSAGE = 'sendMessage';
 
     public static readonly makeCreerJeu = () => ({type: Actions.CREER_JEU});
+    public static readonly makeSupprimerJeu = (uid : string) => ({type: Actions.SUPPRIMER_JEU, uid});
 
     public static readonly makeStart = () => ({type: Actions.START});
 
@@ -33,7 +36,7 @@ export class Actions {
 
     public static readonly makeJoindre = (guid: string, nomJoueur: string) => ({guid, nomJoueur, type: Actions.JOINDRE});
 
-    public static readonly makeJoindreJeu = (jeuId: number) => ({type: Actions.JOINDRE_JEU, jeuId});
+    public static readonly makeJoindreJeu = (uid: string) => ({type: Actions.JOINDRE_JEU, uid});
 
     public static readonly makeAction = (data: any) => ({type: Actions.ACTION,data});
 

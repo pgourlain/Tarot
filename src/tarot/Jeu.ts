@@ -36,10 +36,21 @@ export default class Jeu {
         V: 10,
     };
 
+    static uuidv4() : string {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          // tslint:disable-next-line:no-bitwise
+          const r = Math.random() * 16 | 0;
+          // tslint:disable-next-line:no-bitwise
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      }
+
     public static creeNouveauJeu(): Jeu {
         const cartes = [...TarotCartes];
         shuffle(cartes);
         const data: IData = {
+            uid : this.uuidv4(),
             cartes,
             cartesJoueurs: [],
             chat: '',
@@ -222,7 +233,9 @@ export default class Jeu {
     }
 
     private static pointsNecessaire(cartes: Card[]) {
-        const points = [56, 51, 41, 31];
+        // source pour le contrat à réalisé
+        // https://bric-a-brac.org/tarot/scores.php
+        const points = [56, 51, 41, 36];
         const bouts = cartes.reduce((count, c) => {
             switch (c) {
                 case 'A1':
@@ -339,7 +352,7 @@ export default class Jeu {
             this.data.chien = [];
             this.data.etat = Etats.FAIRE_JEU;
             callback();
-        }, 7000);
+        }, 10000);
     }
 
     private carteClick(qui: number, carte: Card, callback: () => void) {

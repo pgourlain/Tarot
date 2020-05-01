@@ -64,8 +64,8 @@ export default class Card extends React.Component<ICardProps> {
         }
         const {row, column} = Card.findRowColumn(card);
         const style = {
-            background: 'url(/tarot/img/tarotcards.jpg)',
-            backgroundPosition: (-57 * column) + 'px ' + (-105 * row) + 'px',
+            background: 'url(/tarot/img/tarotcards.png)',
+            backgroundPosition: (-0+ (-57 * column)) + 'px ' + (-105 * row) + 'px',
             height: '105px',
             width: '57px',
         };

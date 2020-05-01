@@ -2,6 +2,7 @@ import {Card} from '../tarot/enums/Card';
 import {Etats} from '../tarot/Jeu';
 
 export interface IData {
+    uid : string;
     premierTourDe: number;
     cartes: Card[];
     cartesJoueurs: Card[][];

@@ -1,9 +1,15 @@
 .table {
     border: 1px solid black;
     width: 200px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 3px;
+    margin-right: 1em;
 }
 .table.joinable {
-    background-color: sandybrown;
+    background-color: green;
 }
 .table.active {
     background-color: lightgray;
@@ -48,7 +54,106 @@
     flex-grow: 1;
 }
 
+.mainboard {
+    display: flex;
+    flex-wrap: nowrap;
+    background-color: green;
+    min-height: 320px;
+    border-radius: 20px;
+    padding: 10px;
+}
+
+.mainboardLeft { 
+    width: 50%;
+    border-radius: 10px 0px 0px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.mainboardCenter {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.mainboardCenterUp {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.flexcolumnAlignBottom {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.mainboardCenterDown {
+    height: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;  
+}
+
+.mainboardCenterCenter {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border:  solid black 1px;
+    border-radius: 10px;
+    margin: 5px;
+}
+
+.mainboardRight {
+    width: 50%;
+    border-radius: 0px 10px 10px 0px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.lastpli {
+    height: auto;
+}
+
+.tableList {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 1em;
+}
+
+.newTable {
+    display: flex;
+    min-height: 100px;
+    width: 100px;
+    justify-content: center;
+    align-items: center;
+}
+
+.newTable input {
+    background-color:green; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 1.3333333333333333em;
+    font-weight: 900;
+    font-family: "Font Awesome 5 Free";
+}
+
+
 @media (min-width: 1300px) {
+    .mainboard {
+        max-width: 1065px;
+    }
     .chat {
         position: absolute;
         right: 8px;

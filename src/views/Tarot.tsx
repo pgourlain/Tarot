@@ -7,19 +7,10 @@ import {Etats} from '../tarot/Jeu';
 import Chat from './Chat';
 import Nom from './Nom';
 import Table from '../tarot/views/Table';
+import {ITarotState} from '../interfaces/ITarotState';
+import TableList from '../tarot/views/TableList';
 
 const w3cwebsocket: typeof WebSocket = (websocket as any).w3cwebsocket;
-
-interface ITarotState {
-    chat_attendant: string;
-    client: WebSocket | null;
-    guid: string;
-    jeu: ResponseJeu | null;
-    joueurs: string[] | null;
-    moi: number | null;
-    nomJoueur: string;
-    jeux: {jeuId: number, active: boolean, joueurs: string[]}[];
-}
 
 export default class Tarot extends React.Component<{}, ITarotState> {
     public state: ITarotState = {
@@ -143,14 +134,7 @@ export default class Tarot extends React.Component<{}, ITarotState> {
                     {this.state.joueurs.length} {this.state.joueurs.length === 1 ? 'joueur attend' : 'joueurs attendent'}: <Nom nom={this.state.joueurs}/><br/>
                     <input type="button" value="Quitter"
                            onClick={() => client.send(JSON.stringify(Actions.makeQuitter()))}/>
-                    <div><input type="button" value="Nouveau table" onClick={() => client.send(JSON.stringify(Actions.makeCreerJeu()))}/></div>
-                    {this.state.jeux.reverse().map(jeu => <div className={'table ' + (jeu.active ? 'active' : 'joinable')} key={jeu.jeuId}>
-                        <ul>
-                            {jeu.joueurs.map((joueur,i) => <li key={i}>{joueur}</li>)}
-                        </ul>
-                        {(!jeu.active) ? <input type="button" value="Joindre ce jeu"
-                               onClick={() => client.send(JSON.stringify(Actions.makeJoindreJeu(jeu.jeuId)))}/> : ''}
-                    </div>)}
+                    <TableList client={this.state.client} jeux={this.state.jeux} />
                     <Chat chat={this.state.chat_attendant}
                           onSubmit={message => client.send(JSON.stringify(Actions.makeSendMessage(message)))}/>
                 </div>;

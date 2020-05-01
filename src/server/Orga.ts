@@ -4,6 +4,7 @@ import {Action, Actions} from '../datastructure/actions';
 import {ServerResponses} from '../datastructure/responses';
 import {IData} from '../interfaces/IData';
 import Jeu, {Etats} from '../tarot/Jeu';
+import { IJeu } from '../interfaces/IJeu';
 
 interface ISavedGame {
     jeux: { jeuData: IData|null, guids: string[] }[];
@@ -101,6 +102,24 @@ export function createActionHandler(connection: WebsocketConnection) {
                 jeux.push(newJeu);
                 envoieTousAttendant();
                 break;
+            case Actions.SUPPRIMER_JEU:
+                // remove jeuId
+                const i = jeux.findIndex(x => x ? x.data.uid===m.uid : false);
+                const jeuToDelete = i >=0 ? jeux[i] : null;
+                if ((!jeuToDelete) || jeuToDelete.data.etat !== Etats.ATTENDANT) {
+                    console.warn('game does not exist or has already started');
+                    return;
+                }
+                // console.log("jeudtodelete");
+                // console.log(jeuToDelete);
+                if (jeuToDelete.guids.length > 0) {
+                    console.warn('cannot delete game with players inside');
+                    // TODO error
+                    return;
+                }
+                jeux.splice(i, 1);
+                envoieTousAttendant();
+                break;
             case Actions.QUITTER: {
                 if (guid && guid in knownGuids) {
                     delete knownGuids[guid];
@@ -113,12 +132,13 @@ export function createActionHandler(connection: WebsocketConnection) {
                 if (!guid || !(guid in knownGuids)) {
                     return;
                 }
-                const prochainJeu = jeux[m.jeuId];
+                const i = jeux.findIndex(x => x ? x.data.uid===m.uid : false);
+                const prochainJeu = jeux[i];
                 if ((!prochainJeu) || prochainJeu.data.etat !== Etats.ATTENDANT) {
                     console.warn('game does not exist or has already started');
                     return;
                 }
-                if (prochainJeu.guids.length >= 5) {
+                if (prochainJeu.guids.length >= 4) {
                     console.warn('too many players');
                     // TODO error
                     return;
@@ -175,7 +195,7 @@ export function createActionHandler(connection: WebsocketConnection) {
                         sendToAll(jeu);
                     } else {
                         const jeuId = jeux.findIndex(j => j === knownGuids[myGuid].jeu);
-                        jeux[jeuId] = null;
+                        jeux.splice(jeuId, 1);
                         jeu.guids.forEach(g => knownGuids[g].jeu = null);
                     }
                     knownGuids[myGuid].jeu = null;
@@ -225,7 +245,16 @@ function envoieTousAttendant() {
     const jeu = jeux
         .map((j,i) => {return {jeu: j, i}})
         .filter(j => j.jeu)
-        .map(j => { return {jeuId: j.i, active: j.jeu?.data.etat!==Etats.ATTENDANT, joueurs: (j.jeu ? j.jeu.guids.map(g=>knownGuids[g].nom) : [])}; });
+        .map(j => {
+            const res:IJeu = {
+                uid:j.jeu?.data.uid ? j.jeu?.data.uid : '',
+                jeuId: j.i,
+                active: j.jeu?.data.etat!==Etats.ATTENDANT, 
+                joueurs: (j.jeu ? j.jeu.guids.map(g=>knownGuids[g].nom) : [])
+            };
+            return res;
+            // return {uid:j.jeu?.data.uid, jeuId: j.i, active: j.jeu?.data.etat!==Etats.ATTENDANT, joueurs: (j.jeu ? j.jeu.guids.map(g=>knownGuids[g].nom) : [])}; 
+        });
     Object.values(knownGuids).filter(g => !g.jeu).forEach(g => g.connection?.sendUTF(JSON.stringify(ServerResponses.makeJoueurJoint(nomJoueurs, jeu, chatAttendant))));
 }
 
