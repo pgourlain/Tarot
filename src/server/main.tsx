@@ -17,7 +17,7 @@ let cssData = '';
 
 const WEB_SERVER = '/tarot';
 const BUILD_DIR = 'dist';
-const PORT = 8181;
+const PORT = process.env.PORT || 8181;
 const IMG_DIR = __dirname + '/../../img/';
 
 function loadJSFile(js: { content: string, hash: string, path: string }, file: string) {
