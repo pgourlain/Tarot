@@ -41,7 +41,8 @@
     "webpack-cli": "~3.3.11"
   },
   "scripts": {
-    "start": "NODE_ENV=production npm run startServer",
+    "start": "npm run buildServer && npm run startServer",
+    "start1": "NODE_ENV=production npm run startServer",
     "start-dev": "webpack-cli --watch --mode=development && npm run buildServer",
     "build": "webpack-cli --mode=production",
     "updatepackages": "ncu -u",
