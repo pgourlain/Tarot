@@ -1,2 +1,2 @@
   
-web: node lib/server/main.js
+web: npm run startServer

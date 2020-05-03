@@ -1,6 +1,9 @@
 {
-  "name": "Tarot",
-  "description": "Jouer Tarot sur ligne",
+  "name": "tarot",
+  "description": "Jouer au Tarot en ligne",
+  "engines": {
+    "node": "12.x"
+  },
   "dependencies": {
     "compression": "~1.7.4",
     "connect": "~3.7.0",
@@ -12,6 +15,7 @@
     "react-dom": "~16.13.1",
     "send": "~0.17.1",
     "systemd-socket": "~0.0.0",
+    "typescript": "~3.8.3",
     "uuid": "~7.0.2",
     "websocket": "~1.0.31"
   },
@@ -35,7 +39,6 @@
     "source-map-loader": "~0.2.4",
     "ts-loader": "~7.0.1",
     "tslint": "~6.1.0",
-    "typescript": "~3.8.3",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "^4.42.0",
     "webpack-cli": "~3.3.11"
