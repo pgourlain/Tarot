@@ -1,2 +1,2 @@
   
-web: npm run startServer
+web: npm run buildStartServer
